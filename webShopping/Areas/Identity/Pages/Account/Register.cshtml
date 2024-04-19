@@ -1,0 +1,144 @@
+﻿@page
+@model RegisterModel
+@using webShopping.Models
+@{
+    ViewData["Title"] = "Register";
+}
+
+
+
+<div class="row">
+    <div class="col-md-4">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <h2 style="text-align:center;color:green">Sign up Form</h2>
+            <hr />
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Name" class="form-control" autocomplete="username" aria-required="true" placeholder="Name" />
+                <label asp-for="Input.Name">Name</label>
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.LastName" class="form-control" autocomplete="username" aria-required="true" placeholder="LastName" />
+                <label asp-for="Input.LastName">LastName</label>
+                <span asp-validation-for="Input.LastName" class="text-danger"></span>
+            </div>
+            
+            
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Email" />
+                <label asp-for="Input.Email">Email</label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.TelphonNo" class="form-control" autocomplete="username" aria-required="true" placeholder="Phone No" />
+                <label asp-for="Input.TelphonNo">Phone No</label>
+                <span asp-validation-for="Input.TelphonNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Addres" class="form-control" autocomplete="username" aria-required="true" placeholder="Addres" />
+                <label asp-for="Input.Addres">Addres</label>
+                <span asp-validation-for="Input.Addres" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.City" class="form-control" autocomplete="username" aria-required="true" placeholder="City" />
+                <label asp-for="Input.City">City</label>
+                <span asp-validation-for="Input.City" class="text-danger"></span>
+            </div>
+
+            
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Country" class="form-control" autocomplete="username" aria-required="true" placeholder="Country" />
+                <label asp-for="Input.Country">Country</label>
+                <span asp-validation-for="Input.Country" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.PostaKodu" class="form-control" autocomplete="username" aria-required="true" placeholder="PostaKodu" />
+                <label asp-for="Input.PostaKodu">PostaCodu</label>
+                <span asp-validation-for="Input.PostaKodu" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password">Password</label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            @if (User.IsInRole(Diger.Role_Admin))
+            {
+                <div class="form-floating">
+                    @Html.DropDownListFor(m => m.Input.Role, Model.Input.RoleList, "Choose Role ", new { @class = "form-control" })
+                </div>
+            }
+
+
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-success"><i class="bi bi-person-circle"></i> Register</button>
+        </form>
+        <br />
+        <section>
+
+            @{
+                if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                {
+                    <div class="col-md-4">
+                        <p>
+                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">
+                                article
+                                about setting up this ASP.NET application to support logging in via external services
+                            </a>.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                        <div>
+                            <p>
+                                @foreach (var provider in Model.ExternalLogins!)
+                                {
+                                    <button type="submit" style="width:49%;font-size:15px ;color:black" width="30px" class="btn btn-outline-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                        @if (provider.Name == "Facebook")
+                                        {
+
+
+                                            <img src="~/images/image/fe.png" width="22px" height="25px" /> <!-- FontAwesome Facebook Icon -->
+                                        }
+                                        else if (provider.Name == "Google")
+                                        {
+
+
+                                            <img src="~/images/image/google.png" width="25px" />
+                                        }
+
+
+                                    </button>
+                                }
+                            </p>
+                        </div>
+                    </form>
+
+                }
+            }
+        </section>
+    </div>
+    <div class="col-md-6 col-md-offset-2">
+        <br />
+       
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

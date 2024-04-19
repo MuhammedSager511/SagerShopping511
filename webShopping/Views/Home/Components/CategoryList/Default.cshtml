@@ -1,0 +1,17 @@
+﻿
+@model IEnumerable<webShopping.Models.Categoty>
+
+<div class="col-md-3">
+    <div class="card">
+        <div class="list-group">
+            <a asp-action="Index" asp-controller="Home" class="list-group-item list-group-item-action @(  ViewBag.KategoryId==null?"active":"") " aria-current="true">
+                All Products
+            </a>
+           
+            @foreach (var item in Model)
+            {
+                <a asp-action="CategoryDetails" class="list-group-item list-group-item-action @(  ViewBag.KategoryId?.ToString()==item.Id.ToString()?"active":"") " asp-route-Id="@item.Id">@item.Name</a>
+            }
+           </div>
+    </div>
+</div>

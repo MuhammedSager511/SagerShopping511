@@ -1,0 +1,142 @@
+﻿@model webShopping.Models.OrderDetailsVM
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<form method="post">
+    <input hidden asp-for="OrderHeader.Id" />
+
+    <div class="container">
+        <div class="row">
+         
+            <div class="col-md-6">
+              
+                <div>
+
+                    <dl class="row">
+
+
+                        <dt class="col-sm-4">
+                        Name :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.Name
+                        </dd>
+
+                        <dt class="col-sm-4">
+                         LastName :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.LastName
+                        </dd>
+
+                        <dt class="col-sm-4">
+                     PhoneNumber :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.PhoneNumber
+                        </dd>
+
+                        <dt class="col-sm-4">
+                     Addres :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.Addres
+                        </dd>
+
+                        <dt class="col-sm-4">
+                        District :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.Semt
+                        </dd>
+
+
+                        <dt class="col-sm-4">
+                        City :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.sehir
+                        </dd>
+
+                        <dt class="col-sm-4">
+                         PostCodu :
+                        </>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.PostKodu
+                        </dd>
+
+                        <dt class="col-sm-4">
+                         Order Date :
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.OrderHeader.orderDate.ToShortDateString()
+                        </dd>
+                    </dl>
+
+
+
+                </div>
+            </div>
+
+
+            <div class="col-md-6">
+                <div class="col-md-12">
+
+                    <ul class="list-group mb-3">
+                        @foreach (var item in Model.orderDetails)
+                        {
+                            <li class="list-group-item d-flex justify-content-between lh-sm">
+                                <div>
+                                    <h6 class="my-0">@item.product.Name</h6>
+                                    <small class="text-body-secondary"> Count  :@item.count</small>
+                                </div>
+                                <span class="text-body-secondary">@((item.count * item.product.Price).ToString("0.00")) $</span>
+                            </li>
+                        }
+
+
+                        <li class="list-group-item d-flex justify-content-between bg-body-tertiary">
+                            <div class="text-success">
+                                <h6 class="my-0">Total Amount =</h6>
+
+                            </div>
+                            <span class="text-success">@(Model.OrderHeader.orderTotal.ToString("0.00")) $</span>
+                        </li>
+
+                    </ul>
+
+
+                    @if (User.IsInRole(Diger.Role_Admin))
+                    {
+
+                        <br />
+                        @if(Model.OrderHeader.orderStatus==Diger.status_confirmed)
+                        {
+                            <input type="submit" value="Ship it" 
+                                   class=" btn btn-primary form-control"
+                                   formaction="/Order/ShipIt"
+                                    formmethod="post"/>
+                        }
+                        @if (Model.OrderHeader.orderStatus == Diger.status_pending)
+                        {
+                            <input type="submit" value="Approve"
+                                   class=" btn btn-primary form-control"
+                                   formaction="/Order/Approved"
+                                   formmethod="post" />
+                        }
+                    }
+                    else
+                    {
+                        <label class="btn btn-primary form-control">@Model.OrderHeader.orderStatus</label>
+                    }
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+

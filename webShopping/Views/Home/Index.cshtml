@@ -1,0 +1,42 @@
+﻿@model IEnumerable<webShopping.Models.Product>
+
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<div class="container">
+    <div class=" row">
+        @await Component.InvokeAsync("CategoryList")
+        @foreach (var item in Model)
+        {
+            <div class="col-md-3">
+                <div class="card" style="height:450px" >
+                    <div class="card-header">
+                        @item.Name
+                    </div>
+                    <div>
+                        @if (item.Path == null)
+                        {
+                            <img src="~/images/image/oip.jpg" class="card-img-top" width="150px" height="200px" />
+                        }
+                        else
+                        {
+                            <img src="~/files/@item.Path" class="card-img-top" width="150px" height="250px" />
+                        }
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text" style="overflow-y: auto; height: 60px;">@item.Description</p>
+                    </div>
+                    <div class="card-footer">
+                        <label style="font-size: 20px; color: crimson;"><b>@item.Price.ToString("0.00") $</b></label>
+                        <a asp-action="Details" asp-controller="Home" asp-route-id="@item.Id" class="btn btn-outline-info" style="float: right;"><i class="bi bi-eye-fill"></i> Details</a>
+                    </div>
+                </div>
+                <br />
+            </div>
+
+        }
+    </div>
+</div>
