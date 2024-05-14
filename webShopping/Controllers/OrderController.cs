@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NToastNotify;
 using System.Security.Claims;
 using webShopping.Data;
 using webShopping.Models;
@@ -11,11 +12,14 @@ namespace webShopping.Controllers
     public class OrderController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly IToastNotification toast;
+
         [BindProperty]
         public OrderDetailsVM orderMv {  get; set; }    
-        public OrderController(ApplicationDbContext db)
+        public OrderController(ApplicationDbContext db, IToastNotification toast)
         {
             this.db = db;
+            this.toast = toast;
         }
         [HttpPost]
         [Authorize(Roles =Diger.Role_Admin)]    
@@ -129,5 +133,23 @@ namespace webShopping.Controllers
 
             return View(orderHeadersList);
         }
+        public IActionResult Delete(int id)
+        {
+            var orderHeader = db.OrderHeaders.FirstOrDefault(i => i.Id == id);
+            if (orderHeader == null)
+            {
+                return NotFound();
+            }
+
+
+         
+            db.OrderHeaders.Remove(orderHeader);
+
+           
+            db.SaveChanges();
+            toast.AddSuccessToastMessage("The active request has been deleted....");
+            return RedirectToAction("Index");
+        }
+
     }
 }

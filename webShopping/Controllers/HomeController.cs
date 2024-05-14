@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NToastNotify;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -26,7 +27,8 @@ namespace webShopping.Controllers
         {
             if (!String.IsNullOrEmpty(q))
             {
-                var sea=db.Products.Where(i=>i.Name.Contains(q)||i.Description.Contains(q));
+                //||i.Description.Contains(q)
+                var sea =db.Products.Where(i=>i.Name.Contains(q));
                 return View(sea);
             }
             return View();
@@ -41,20 +43,39 @@ namespace webShopping.Controllers
 
 
 
-        public IActionResult Index()
+        //public IActionResult Index()
 
+        //{
+
+        //    var product=db.Products.Where(i => i.IsHome).ToList();
+        //    var claimIdentity = (ClaimsIdentity)User.Identity;
+        //    var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
+        //    if (claim!=null)
+        //    {
+        //        var count=db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value).Count();
+        //        HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
+        //    }
+
+        //    return View(product);
+        //}
+        public IActionResult Index(int page = 1, int pageSize = 7)
         {
-        
-            var product=db.Products.Where(i => i.IsHome).ToList();
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            if (claim!=null)
-            {
-                var count=db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value).Count();
-                HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
-            }
+            
+            var totalProducts = db.Products.Where(i => i.IsHome).Count();
+            var totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
 
-            return View(product);
+            //  Õ„Ì· «·⁄‰«’— ··’›Õ… «·Õ«·Ì…
+            var products = db.Products
+                                    .Where(i => i.IsHome)
+                                    .OrderBy(p => p.Id)
+                                    .Skip((page - 1) * pageSize)
+                                    .Take(pageSize)
+                                    .ToList();
+
+            // ‰ﬁ· «·„⁄·Ê„«  ··⁄—÷
+            ViewData["TotalPages"] = totalPages;
+            ViewData["CurrentPage"] = page;
+            return View(products);
         }
 
         public IActionResult Privacy()

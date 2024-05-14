@@ -23,7 +23,7 @@
                Price
             </th>
             
-            <th style="width:100px">
+            <th id="De">
                 Description
             </th>
             <th>
@@ -35,7 +35,7 @@
             <th>
                 Kategori
             </th>
-            <th></th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -63,9 +63,10 @@
                 @Html.DisplayFor(modelItem => item.Price)
             </td>
 
-                <td style="width:100px">
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
+
+                <td >
+                        @Html.DisplayFor(modelItem => item.Description)
+                </td>
                 <td>
                     @if (item.IsHome)
                     {

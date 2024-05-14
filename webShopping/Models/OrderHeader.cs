@@ -37,5 +37,8 @@ namespace webShopping.Models
         public string ExpiratioYear{ get; set; }
         [Required]
         public string CVC { get; set; }
+        [NotMapped]
+        public OrderDetailsVM detailsVM { get; set; }
+
     }
 }

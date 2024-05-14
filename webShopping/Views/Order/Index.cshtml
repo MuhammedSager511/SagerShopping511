@@ -1,4 +1,6 @@
 ﻿@model IEnumerable<webShopping.Models.OrderHeader>
+
+
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -30,16 +32,21 @@
                   @if (User.IsInRole(Diger.Role_Admin))
                 {
                     <th>
-                        Addres
+                        Total
                     </th>
+
                 }else{
                 <th>
                     Email
                 </th>
                 }
                 <th>
+                    Date
+                </th>
+                <th>
                     Situation
                 </th>
+               
                 <th>
                     Action
                 </th>
@@ -60,23 +67,31 @@
                     </td>
                     @if (User.IsInRole(Diger.Role_Admin))
                     {
+                      
                         <th>
-                            @item.Addres
+                              @item.orderTotal
                         </th>
                     }
+                  
                     else
                     {
                         <th>
                             @item.ApplicationUser.Email
                         </th>
                     }
+                    <th>
+                        @item.orderDate
+                    </th>
                     <td>
                         @item.orderStatus
                     </td>
+                    
+                    
                     <td>
                         @if (User.IsInRole(Diger.Role_Admin))
                         {
                             <a asp-action="Details" asp-route-id="@item.Id" class=" btn btn-success"><i class="bi bi-pencil"></i> Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class=" btn btn-danger"><i class="bi bi-trash"></i> Delete</a>
                         }else{
                             <a asp-action="Details" asp-route-id="@item.Id" class=" btn btn-success"><i class="bi bi-pencil"></i> Details</a>
 

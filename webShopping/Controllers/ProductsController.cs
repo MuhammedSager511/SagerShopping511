@@ -26,9 +26,10 @@ namespace webShopping.Controllers
         // GET: FileDetails
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Products.Include(f => f.categoty);
-            return View(await applicationDbContext.ToListAsync());
+            var Products = await _context.Products.Include(f => f.categoty).ToListAsync();
+            return View(Products);
         }
+       
 
         // GET: FileDetails/Details/5
         public async Task<IActionResult> Details(int? id)
