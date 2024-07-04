@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NToastNotify;
 using System.Security.Claims;
+using System.Text;
 using webShopping.Data;
 using webShopping.Models;
 
@@ -21,18 +22,52 @@ namespace webShopping.Controllers
             this.db = db;
             this.toast = toast;
         }
+
+
+        public IActionResult Index()
+        {
+            var claimIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            IEnumerable<OrderHeader> orderHeadersList;
+            if (User.IsInRole(Diger.Role_Admin))
+            {
+                orderHeadersList = db.OrderHeaders
+                                     .Include(o => o.orderDetails)
+                                     .ThenInclude(d => d.product)
+                                     .ToList();
+            }
+            else
+            {
+                orderHeadersList = db.OrderHeaders
+                                     .Where(i => i.ApplicationUserId == claim.Value)
+                                     .Include(i => i.ApplicationUser)
+                                     .Include(o => o.orderDetails)
+                                     .ThenInclude(d => d.product)
+                                     .ToList();
+            }
+
+            return View(orderHeadersList);
+        }
+        /// <summary>
+        /// تم موافقة على الطلب من قبل الادمن
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
-        [Authorize(Roles =Diger.Role_Admin)]    
+        [Authorize(Roles = Diger.Role_Admin)]
         public IActionResult Approved()
-        { 
-            OrderHeader orderHeader=db.OrderHeaders.FirstOrDefault(i=>i.Id==orderMv.OrderHeader.Id);
-            orderHeader.orderStatus=Diger.status_confirmed;
+        {
+            OrderHeader orderHeader = db.OrderHeaders.FirstOrDefault(i => i.Id == orderMv.OrderHeader.Id);
+            orderHeader.orderStatus = Diger.status_confirmed;
             db.SaveChanges();
             return RedirectToAction("Index");
-        
-        
-        }
 
+
+        }
+        /// <summary>
+        /// تم شحن المنتج من قبل الادمن
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         [Authorize(Roles = Diger.Role_Admin)]
         public IActionResult ShipIt()
@@ -47,34 +82,11 @@ namespace webShopping.Controllers
 
 
 
-        public IActionResult Details(int id)
-        {
-            orderMv = new OrderDetailsVM
-            {
-                OrderHeader = db.OrderHeaders.FirstOrDefault(i => i.Id == id),
-                orderDetails=db.orderDetailses.Where(x=>x.OrederId == id).Include(x=>x.product)
 
-            };
-            return View(orderMv);
-        }
-        public IActionResult Index()
-        {
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-
-            IEnumerable<OrderHeader> orderHeadersList;
-            if (User.IsInRole(Diger.Role_Admin))
-            {
-                    orderHeadersList=db.OrderHeaders.ToList();
-            }
-            else
-            {
-                orderHeadersList = db.OrderHeaders.Where(i=>i.ApplicationUserId==claim.Value)
-                                    .Include(i=>i.ApplicationUser);
-            }
-
-            return View(orderHeadersList);
-        }
+        /// <summary>
+        /// حيث ان منتج معلق او على قيد الانتظار 
+        /// </summary>
+        /// <returns></returns>
         public IActionResult pending()
         {
             var claimIdentity = (ClaimsIdentity)User.Identity;
@@ -94,6 +106,10 @@ namespace webShopping.Controllers
 
             return View(orderHeadersList);
         }
+        /// <summary>
+        /// تم تم التأكيد على طلبك للمنتج
+        /// </summary>
+        /// <returns></returns>
         public IActionResult confirmed()
         {
             var claimIdentity = (ClaimsIdentity)User.Identity;
@@ -113,7 +129,10 @@ namespace webShopping.Controllers
 
             return View(orderHeadersList);
         }
-
+        /// <summary>
+        /// المنتجات نقل للتسليم للعملاء
+        /// </summary>
+        /// <returns></returns>
         public IActionResult cargo()
         {
             var claimIdentity = (ClaimsIdentity)User.Identity;
@@ -133,6 +152,11 @@ namespace webShopping.Controllers
 
             return View(orderHeadersList);
         }
+        /// <summary>
+        /// حذف منتج
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public IActionResult Delete(int id)
         {
             var orderHeader = db.OrderHeaders.FirstOrDefault(i => i.Id == id);
@@ -150,6 +174,17 @@ namespace webShopping.Controllers
             toast.AddSuccessToastMessage("The active request has been deleted....");
             return RedirectToAction("Index");
         }
+        public IActionResult Details(int id)
+        {
+            orderMv = new OrderDetailsVM
+            {
+                OrderHeader = db.OrderHeaders.FirstOrDefault(i => i.Id == id),
+                orderDetails = db.orderDetailses.Where(x => x.OrederId == id).Include(x => x.product)
 
+            };
+            return View(orderMv);
+        }
+   
+       
     }
 }

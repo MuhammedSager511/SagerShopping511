@@ -23,42 +23,10 @@ namespace webShopping.Controllers
         }
 
 
-        public IActionResult Search(string q)
-        {
-            if (!String.IsNullOrEmpty(q))
-            {
-                //||i.Description.Contains(q)
-                var sea =db.Products.Where(i=>i.Name.Contains(q));
-                return View(sea);
-            }
-            return View();
-        }
-
-        public IActionResult CategoryDetails(int id)
-        {
-            var product=db.Products.Where(i=>i.CategoryId==id).ToList();
-            ViewBag.KategoryId = id;
-            return View(product);
-        }
+       
 
 
-
-        //public IActionResult Index()
-
-        //{
-
-        //    var product=db.Products.Where(i => i.IsHome).ToList();
-        //    var claimIdentity = (ClaimsIdentity)User.Identity;
-        //    var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-        //    if (claim!=null)
-        //    {
-        //        var count=db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value).Count();
-        //        HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
-        //    }
-
-        //    return View(product);
-        //}
-        public IActionResult Index(int page = 1, int pageSize = 7)
+        public IActionResult Index(int page = 1, int pageSize =3)
         {
             
             var totalProducts = db.Products.Where(i => i.IsHome).Count();
@@ -77,13 +45,40 @@ namespace webShopping.Controllers
             ViewData["CurrentPage"] = page;
             return View(products);
         }
-
-        public IActionResult Privacy()
+        /// <summary>
+        /// œ«·… »ÕÀ
+        /// </summary>
+        /// <param name="q"></param>
+        /// <returns></returns>
+        public IActionResult Search(string q)
         {
+            if (!String.IsNullOrEmpty(q))
+            {
+                //||i.Description.Contains(q)
+                var sea = db.Products.Where(i => i.Name.Contains(q) || i.Description.Contains(q) || i.Price.ToString().Contains(q));
+                return View(sea);
+            }
+          
             return View();
         }
+        /// <summary>
+        /// ›—“ «·„‰ Ã«  Õ”» «·›∆« 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public IActionResult CategoryDetails(int id)
+        {
+            var product = db.Products.Where(i => i.CategoryId == id).ToList();
+            ViewBag.KategoryId = id;
+            return View(product);
+        }
 
-
+      
+        /// <summary>
+        /// œ«·… «·⁄—÷
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         public IActionResult Details(int Id)
         {
             var prodcut = db.Products.FirstOrDefault(i => i.Id == Id);
@@ -96,6 +91,14 @@ namespace webShopping.Controllers
            
             return View(cart);
         }
+        /// <summary>
+        ///   ⁄«„· Â–Â «·œ«·… „⁄ ≈÷«›… «·„‰ Ã«  ≈·Ï ⁄—»… «· ”Êﬁ. ≈–« ﬂ«‰ «·„‰ Ã „ÊÃÊœ« »«·›⁄· ›Ì «·⁄—»…°
+        ///  “Ìœ «·ﬂ„Ì…∫ Ê≈·«°  ÷Ì› «·„‰ Ã ≈·Ï «·⁄—»….
+        ///  ÷„‰ «·œ«·… √‰ «·„” Œœ„ „’—Õ ·Â°   Õﬁﬁ „‰ ’Õ… «·‰„Ê–Ã° Ê ÕœÀ ⁄œœ «·⁄‰«’— ›Ì «·Ã·”….
+        ///  ⁄—÷ —”«·… ‰Ã«Õ ⁄‰œ ≈ „«„ «·⁄„·Ì….
+        /// </summary>
+        /// <param name="Scart"></param>
+        
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -143,6 +146,10 @@ namespace webShopping.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        public IActionResult About()
+        {
+            return View();
         }
     }
 }

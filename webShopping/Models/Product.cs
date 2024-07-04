@@ -29,6 +29,8 @@ namespace webShopping.Models
         [NotMapped]
        
         public IFormFile? File { get; set; }
+       
+
     }
 
 }

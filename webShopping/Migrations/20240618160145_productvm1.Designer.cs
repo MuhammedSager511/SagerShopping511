@@ -12,15 +12,15 @@ using webShopping.Data;
 namespace webShopping.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240413115351_cvc")]
-    partial class cvc
+    [Migration("20240618160145_productvm1")]
+    partial class productvm1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -549,7 +549,7 @@ namespace webShopping.Migrations
             modelBuilder.Entity("webShopping.Models.orderDetails", b =>
                 {
                     b.HasOne("webShopping.Models.OrderHeader", "OrderHeader")
-                        .WithMany()
+                        .WithMany("orderDetails")
                         .HasForeignKey("OrederId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -563,6 +563,11 @@ namespace webShopping.Migrations
                     b.Navigation("OrderHeader");
 
                     b.Navigation("product");
+                });
+
+            modelBuilder.Entity("webShopping.Models.OrderHeader", b =>
+                {
+                    b.Navigation("orderDetails");
                 });
 #pragma warning restore 612, 618
         }

@@ -40,5 +40,9 @@ namespace webShopping.Models
         [NotMapped]
         public OrderDetailsVM detailsVM { get; set; }
 
+        public ICollection<orderDetails> orderDetails { get; set; }
+      
+
+
     }
 }

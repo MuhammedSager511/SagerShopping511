@@ -55,7 +55,11 @@ namespace webShopping.Controllers
            
             return View(ShoppingCartVM);
         }
-
+        /// <summary>
+        /// اضافة منتج الى سلة 
+        /// </summary>
+        /// <param name="cartId"></param>
+        /// <returns></returns>
         public IActionResult Add(int cartId)
         {
             var cart= db.ShoppingCarts.FirstOrDefault(i=>i.Id == cartId);
@@ -63,6 +67,11 @@ namespace webShopping.Controllers
             db.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
+        /// <summary>
+        /// تقليل منتج من سلة
+        /// </summary>
+        /// <param name="cartId"></param>
+        /// <returns></returns>
         public IActionResult Decrease(int cartId)
         {
             var cart = db.ShoppingCarts.FirstOrDefault(i => i.Id == cartId);
@@ -81,7 +90,11 @@ namespace webShopping.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        /// <summary>
+        /// حذف منتج من السلة
+        /// </summary>
+        /// <param name="cartId"></param>
+        /// <returns></returns>
         public IActionResult Remove(int cartId)
         {
             var cart = db.ShoppingCarts.FirstOrDefault(i => i.Id == cartId);
@@ -112,10 +125,15 @@ namespace webShopping.Controllers
             }
             return View(ShoppingCartVM);
         }
-    
+    /// <summary>
+    /// دوال في اسفل مسؤولة عن عملية الدفع
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        
         public IActionResult Summary(ShoppingCartVM model)
         {
             var claimIdentity = (ClaimsIdentity)User.Identity;
@@ -151,7 +169,7 @@ namespace webShopping.Controllers
             HttpContext.Session.SetInt32(Diger.ssShoppingCart,0);
 
 
-            return RedirectToAction(nameof(SiparisTamam));
+            return RedirectToAction(nameof(Index));
         }
 
         private Payment PaymentProcess(ShoppingCartVM model)
@@ -290,10 +308,7 @@ namespace webShopping.Controllers
 
             return RedirectToAction("Success");
         }
-        public IActionResult Success()
-        {
-            return View();
-        }
+       
 
 
 

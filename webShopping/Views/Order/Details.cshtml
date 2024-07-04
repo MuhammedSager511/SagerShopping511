@@ -1,4 +1,5 @@
 ﻿@model webShopping.Models.OrderDetailsVM
+
 @{
     ViewData["Title"] = "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -9,44 +10,44 @@
 
     <div class="container">
         <div class="row">
-         
+
             <div class="col-md-6">
-              
+
                 <div>
 
                     <dl class="row">
 
 
                         <dt class="col-sm-4">
-                        Name :
+                            Name :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.Name
                         </dd>
 
                         <dt class="col-sm-4">
-                         LastName :
+                            LastName :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.LastName
                         </dd>
 
                         <dt class="col-sm-4">
-                     PhoneNumber :
+                            PhoneNumber :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.PhoneNumber
                         </dd>
 
                         <dt class="col-sm-4">
-                     Addres :
+                            Addres :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.Addres
                         </dd>
 
                         <dt class="col-sm-4">
-                        District :
+                            District :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.Semt
@@ -54,24 +55,24 @@
 
 
                         <dt class="col-sm-4">
-                        City :
+                            City :
                         </dt>
                         <dd class="col-sm-8">
                             @Model.OrderHeader.sehir
                         </dd>
 
                         <dt class="col-sm-4">
-                         PostCodu :
-                        </>
+                            PostCodu :
+                            </>
                         <dd class="col-sm-8">
-                            @Model.OrderHeader.PostKodu
+                                @Model.OrderHeader.PostKodu
                         </dd>
 
                         <dt class="col-sm-4">
-                         Order Date :
+                            Order Date :
                         </dt>
                         <dd class="col-sm-8">
-                            @Model.OrderHeader.orderDate.ToShortDateString()
+                                @Model.OrderHeader.orderDate.ToShortDateString()
                         </dd>
                     </dl>
 
@@ -112,12 +113,12 @@
                     {
 
                         <br />
-                        @if(Model.OrderHeader.orderStatus==Diger.status_confirmed)
+                        @if (Model.OrderHeader.orderStatus == Diger.status_confirmed)
                         {
-                            <input type="submit" value="Ship it" 
+                            <input type="submit" value="Ship it"
                                    class=" btn btn-primary form-control"
                                    formaction="/Order/ShipIt"
-                                    formmethod="post"/>
+                                   formmethod="post" />
                         }
                         @if (Model.OrderHeader.orderStatus == Diger.status_pending)
                         {
@@ -129,7 +130,7 @@
                     }
                     else
                     {
-                        <label class="btn btn-primary form-control">@Model.OrderHeader.orderStatus</label>
+                        <label class=" btn btn-warning form-control">You will be answered as soon as possible...!!!</label>
                     }
 
 
@@ -139,4 +140,3 @@
         </div>
     </div>
 </form>
-

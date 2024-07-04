@@ -5,6 +5,7 @@ using NToastNotify;
 using webShopping.Data;
 using webShopping.Email;
 
+
 namespace webShopping
 {
     public class Program
@@ -60,8 +61,8 @@ namespace webShopping
                 options.Cookie.IsEssential = true;
 
             });
-
-           var app = builder.Build();
+       
+            var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

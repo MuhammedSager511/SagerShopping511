@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace webShopping.Controllers
 {
     [Authorize(Roles = Diger.Role_Admin)]
+    
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -153,44 +154,6 @@ namespace webShopping.Controllers
             return View(fileDetails);
         }
 
-        //public async Task<IActionResult> Edit(int id, FileDetails fileDetails)
-        //{
-        //    if (id != fileDetails.Id)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        if (fileDetails.File != null)
-        //        {
-        //            string fileFolder = Path.Combine(hosting.WebRootPath, "Products");
-        //            string fileName = DateTime.Now.Ticks.ToString() + Path.GetExtension(fileDetails.File.FileName);
-        //            string filePath = Path.Combine(fileFolder, fileName);
-
-
-        //            using (var stream = new Productstream(filePath, FileMode.Create))
-        //            {
-        //                await fileDetails.File.CopyToAsync(stream);
-        //            }
-
-        //            fileDetails.Path = fileName;
-
-        //            // Rotate the image 90 degrees clockwise
-        //            using (var image = Image.FromFile(filePath))
-        //            {
-        //                image.RotateFlip(RotateFlipType.Rotate90FlipNone);
-        //                image.Save(filePath, ImageFormat.Jpeg); // You can change the format if needed
-        //            }
-        //        }
-        //        _context.Update(fileDetails);
-        //       await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
-        //    return View(fileDetails);
-        //}
-
         // GET: FileDetails/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -241,5 +204,6 @@ namespace webShopping.Controllers
         {
             return _context.Products.Any(e => e.Id == id);
         }
+       
     }
 }
