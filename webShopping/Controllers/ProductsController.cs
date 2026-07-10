@@ -1,209 +1,425 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.AspNetCore.Mvc.Rendering;
+
 using Microsoft.EntityFrameworkCore;
-using webShopping.Models;
+
+using NToastNotify;
+
 using webShopping.Data;
-using Microsoft.AspNetCore.Authorization;
+
+using webShopping.Models;
+
+using webShopping.Services;
+
+
 
 namespace webShopping.Controllers
+
 {
+
     [Authorize(Roles = Diger.Role_Admin)]
-    
+
     public class ProductsController : Controller
+
     {
+
         private readonly ApplicationDbContext _context;
-        private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment hosting;
 
-        public ProductsController(ApplicationDbContext context, Microsoft.AspNetCore.Hosting.IHostingEnvironment hosting)
+        private readonly IWebHostEnvironment _env;
+
+        private readonly IToastNotification _toast;
+
+        private readonly IAppLocalizer _localizer;
+
+        private readonly IImageUploadService _images;
+
+
+
+        public ProductsController(
+
+            ApplicationDbContext context,
+
+            IWebHostEnvironment env,
+
+            IToastNotification toast,
+
+            IAppLocalizer localizer,
+
+            IImageUploadService images)
+
         {
+
             _context = context;
-            this.hosting = hosting;
+
+            _env = env;
+
+            _toast = toast;
+
+            _localizer = localizer;
+
+            _images = images;
+
         }
 
-        // GET: FileDetails
+
+
         public async Task<IActionResult> Index()
-        {
-            var Products = await _context.Products.Include(f => f.categoty).ToListAsync();
-            return View(Products);
-        }
-       
 
-        // GET: FileDetails/Details/5
+        {
+
+            var products = await _context.Products.Include(f => f.categoty).ToListAsync();
+
+            return View(products);
+
+        }
+
+
+
         public async Task<IActionResult> Details(int? id)
+
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var fileDetails = await _context.Products
+            if (id == null) return NotFound();
+
+
+
+            var product = await _context.Products
+
                 .Include(f => f.categoty)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (fileDetails == null)
-            {
-                return NotFound();
-            }
 
-            return View(fileDetails);
+                .Include(f => f.Images)
+
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+
+
+            return product == null ? NotFound() : View(product);
+
         }
 
-        // GET: FileDetails/Create
+
+
         public IActionResult Create()
+
         {
+
+            if (!_context.Categoties.Any())
+
+            {
+
+                _toast.AddWarningToastMessage(_localizer["ToastCategoryRequired"]);
+
+                return RedirectToAction("Index", "Categoties");
+
+            }
+
+
+
             ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name");
+
             return View();
+
         }
 
-        // POST: FileDetails/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
 
+        public async Task<IActionResult> Create(Product fileDetails, List<IFormFile>? galleryFiles)
 
-
-        public async Task<IActionResult> Create(Product fileDetails)
         {
-            if (!ModelState.IsValid)
+
+            ModelState.Remove(nameof(Product.FileType));
+
+            ModelState.Remove(nameof(Product.File));
+
+            ModelState.Remove(nameof(Product.categoty));
+
+            ModelState.Remove(nameof(Product.Path));
+
+            ModelState.Remove(nameof(Product.Images));
+
+            ModelState.Remove(nameof(Product.GalleryFiles));
+
+
+
+            if (fileDetails.CategoryId <= 0 || !_context.Categoties.Any(c => c.Id == fileDetails.CategoryId))
+
+                ModelState.AddModelError(nameof(Product.CategoryId), _localizer["SelectCategory"]);
+
+
+
+            if (ModelState.IsValid)
+
             {
-                if (fileDetails.File != null)
+
+                try
+
                 {
-                    string fileFolder = Path.Combine(hosting.WebRootPath, "files");
-                    string fileName = DateTime.Now.Ticks.ToString() + Path.GetExtension(fileDetails.File.FileName);
-                    string filePath = Path.Combine(fileFolder, fileName);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await fileDetails.File.CopyToAsync(stream);
-                    }
+                    await SaveProductImagesAsync(fileDetails, galleryFiles);
 
-                    fileDetails.Path = fileName;
+                    _context.Add(fileDetails);
 
-                    // Rotate the image 90 degrees clockwise
+                    await _context.SaveChangesAsync();
+
+                    _toast.AddSuccessToastMessage(_localizer["ToastProductSaved"]);
+
+                    return RedirectToAction(nameof(Index));
 
                 }
 
-                string[] extension = fileDetails.Path.Split('.');
-                fileDetails.FileType = extension[1];
-                _context.Add(fileDetails);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+
+                {
+
+                    ModelState.AddModelError("", ex.Message);
+
+                }
+
             }
 
-            //ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
+
+
+            _toast.AddErrorToastMessage(_localizer["ToastProductError"]);
+
+            ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
+
             return View(fileDetails);
+
         }
 
-        // GET: FileDetails/Edit/5
+
+
         public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var fileDetails = await _context.Products.FindAsync(id);
-            if (fileDetails == null)
-            {
-                return NotFound();
-            }
-            ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
-            return View(fileDetails);
+        {
+
+            if (id == null) return NotFound();
+
+
+
+            var product = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product == null) return NotFound();
+
+
+
+            ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", product.CategoryId);
+
+            return View(product);
+
         }
 
-        // POST: FileDetails/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product fileDetails)
+
+        public async Task<IActionResult> Edit(int id, Product fileDetails, List<IFormFile>? galleryFiles)
+
         {
-            if (id != fileDetails.Id)
-            {
-                return NotFound();
-            }
 
-            if (!ModelState.IsValid)
+            if (id != fileDetails.Id) return NotFound();
+
+
+
+            ModelState.Remove(nameof(Product.FileType));
+
+            ModelState.Remove(nameof(Product.File));
+
+            ModelState.Remove(nameof(Product.categoty));
+
+            ModelState.Remove(nameof(Product.Path));
+
+            ModelState.Remove(nameof(Product.Images));
+
+            ModelState.Remove(nameof(Product.GalleryFiles));
+
+
+
+            if (fileDetails.CategoryId <= 0 || !_context.Categoties.Any(c => c.Id == fileDetails.CategoryId))
+
+                ModelState.AddModelError(nameof(Product.CategoryId), _localizer["SelectCategory"]);
+
+
+
+            if (ModelState.IsValid)
             {
-                if (fileDetails.File != null)
+                var tracked = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
+                if (tracked == null) return NotFound();
+
+                tracked.Name = fileDetails.Name;
+                tracked.NameAr = fileDetails.NameAr;
+                tracked.Description = fileDetails.Description;
+                tracked.DescriptionAr = fileDetails.DescriptionAr;
+                tracked.Price = fileDetails.Price;
+                tracked.CategoryId = fileDetails.CategoryId;
+                tracked.IsHome = fileDetails.IsHome;
+                tracked.IsStock = fileDetails.IsStock;
+
+                if (fileDetails.File != null && fileDetails.File.Length > 0)
                 {
-                    string fileFolder = Path.Combine(hosting.WebRootPath, "files");
-                    string fileName = DateTime.Now.Ticks.ToString() + Path.GetExtension(fileDetails.File.FileName);
-                    string filePath = Path.Combine(fileFolder, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await fileDetails.File.CopyToAsync(stream);
-                    }
-
-                    // Update the fileDetails with the new file path
-                    fileDetails.Path = fileName;
+                    tracked.File = fileDetails.File;
+                    await SaveProductImagesAsync(tracked, null);
                 }
 
-                // Update the entity in the database
-                _context.Update(fileDetails);
+                await SaveProductImagesAsync(tracked, galleryFiles, tracked.Images.ToList());
                 await _context.SaveChangesAsync();
+                _toast.AddSuccessToastMessage(_localizer["ToastProductUpdated"]);
                 return RedirectToAction(nameof(Index));
             }
 
+
+
             ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
+
             return View(fileDetails);
+
         }
 
-        // GET: FileDetails/Delete/5
+
+
         public async Task<IActionResult> Delete(int? id)
+
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var fileDetails = await _context.Products
+            if (id == null) return NotFound();
+
+
+
+            var product = await _context.Products
+
                 .Include(f => f.categoty)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (fileDetails == null)
-            {
-                return NotFound();
-            }
 
-            return View(fileDetails);
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+
+
+            return product == null ? NotFound() : View(product);
+
         }
 
-        // POST: FileDetails/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var fileDetails = await _context.Products.FindAsync(id);
-            if (fileDetails != null)
-            {
-                // حذف الصورة من مجلد "Products"
-                if (!string.IsNullOrEmpty(fileDetails.Path))
-                {
-                    string filePath = Path.Combine(hosting.WebRootPath, "Products", fileDetails.Path);
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        System.IO.File.Delete(filePath);
-                    }
-                }
 
-                // حذف العنصر من قاعدة البيانات
-                _context.Products.Remove(fileDetails);
+
+        [HttpPost, ActionName("Delete")]
+
+        [ValidateAntiForgeryToken]
+
+        public async Task<IActionResult> DeleteConfirmed(int id)
+
+        {
+
+            var product = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product != null)
+
+            {
+
+                DeleteFile(product.Path);
+
+                foreach (var img in product.Images)
+
+                    DeleteFile(img.Path);
+
+
+
+                _context.Products.Remove(product);
+
                 await _context.SaveChangesAsync();
+
+                _toast.AddSuccessToastMessage(_localizer["ToastProductDeleted"]);
+
             }
+
+
 
             return RedirectToAction(nameof(Index));
+
         }
 
 
-        private bool FileDetailsExists(int id)
+
+        private async Task SaveProductImagesAsync(Product product, List<IFormFile>? galleryFiles, List<ProductImage>? existingImages = null)
+
         {
-            return _context.Products.Any(e => e.Id == id);
+
+            if (product.File != null && product.File.Length > 0)
+
+            {
+
+                var (fileName, contentType) = await _images.SaveProductImageAsync(product.File);
+
+                product.Path = fileName;
+
+                product.FileType = contentType.Replace("image/", "");
+
+            }
+
+
+
+            if (galleryFiles == null || galleryFiles.Count == 0)
+
+                return;
+
+
+
+            var startOrder = existingImages?.Count ?? product.Images?.Count ?? 0;
+            foreach (var file in galleryFiles.Where(f => f.Length > 0))
+            {
+                var (fileName, _) = await _images.SaveProductImageAsync(file, "gallery");
+                if (product.Id > 0)
+                {
+                    _context.ProductImages.Add(new ProductImage
+                    {
+                        ProductId = product.Id,
+                        Path = fileName,
+                        SortOrder = startOrder++
+                    });
+                }
+                else
+                {
+                    product.Images.Add(new ProductImage { Path = fileName, SortOrder = startOrder++ });
+                }
+            }
+
         }
-       
+
+
+
+        private void DeleteFile(string? path)
+
+        {
+
+            if (string.IsNullOrEmpty(path)) return;
+
+            var filePath = Path.Combine(_env.WebRootPath, "files", path);
+
+            if (System.IO.File.Exists(filePath))
+
+                System.IO.File.Delete(filePath);
+
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteImage(int imageId, int productId)
+        {
+            var img = await _context.ProductImages.FindAsync(imageId);
+            if (img == null || img.ProductId != productId)
+                return NotFound();
+
+            DeleteFile(img.Path);
+            _context.ProductImages.Remove(img);
+            await _context.SaveChangesAsync();
+            _toast.AddSuccessToastMessage(_localizer["ToastImageDeleted"]);
+            return RedirectToAction(nameof(Edit), new { id = productId });
+        }
     }
 }

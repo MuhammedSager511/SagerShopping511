@@ -1,85 +1,103 @@
-﻿@* Views/Shared/_UserPanel.cshtml *@
-@using webShopping.Models
+﻿@using webShopping.Models
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 
 @if (!User.IsInRole(Diger.Role_Admin))
 {
-    <div class="container">
-        <br />
-                <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-dark border-bottom box-shadow mb-3">
-                    <div class="container-fluid">
-                        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index" >
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var isAr = Localizer.IsArabic;
 
-                            <img src="~/images/image/logo.png" style="margin-left:2rem" width="35px" />
-                            <span style="color:white">Sager</span><span style="color:red">Shop</span>
-                        </a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                                aria-expanded="false" aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
-                                <div class="container-fluid">
-                   
-                                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                                        <ul class="navbar-nav flex-grow-1">
-                                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> Home</a>
-                                            </li>
-                         
-                                            @if(User.Identity.IsAuthenticated){
-
-                                            <li class="nav-item">
-                                    <a class="nav-link text-white" asp-area="" asp-controller="Order" asp-action="Index"><i class="bi bi-bag-check"></i> Orders</a>
-                                </li>
-                            }
-                            else
-                            {
-                                <li>
-                                    <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="About"><i class="bi bi-exclamation-circle"></i> About</a>
-                                </li>
-                            }
-                            @if (User.Identity.IsAuthenticated && HttpContextAccessor.HttpContext.Session.GetInt32(Diger.ssShoppingCart) != null)
-                                            {
-                                                <li style="color:white">
-                                                    <a asp-area="" asp-action="Index" asp-controller="Cart" class="nav-link text-white">
-
-                                                        @{
-                                                            var count = HttpContextAccessor.HttpContext.Session.GetInt32(Diger.ssShoppingCart);
-                                                        }
-                                                        <i class="bi bi-cart2"></i>(@count)
-                                                    </a>
-
-                                                </li>
-                                            }
-                                            else
-                                            {
-
-                                                <li style="color:white">
-                                                    <a href="/Identity/Account/Login" class="nav-link text-white">
-
-
-                                                        <i class="bi bi-cart2"></i>(0)
-                                                    </a>
-
-                                                </li>
-                                            }
-                          
-                        </ul>
-
-
-                    <div>
-                                        <form class="form-inline" action="/Home/Search" method="post" style="display: flex; ">
-                                            <input name="q" type="text" class="form-control mr-2" placeholder="Search" />
-                                            <button class="btn btn-outline-info btn-sm" type="submit" style="width:10rem;margin-left:0.5rem;margin-right:0.5rem"><i class="bi bi-search"></i> Search</button>
-
-                                        </form>
-                    </div>
-                        <partial name="_LoginPartial" />
-                                    </div>
-                                </div>
-                     </div>
-                </nav>
-
+    <div class="lang-currency-bar">
+        <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="lang-toggle">
+                <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="en" asp-route-returnUrl="@returnUrl"
+                   class="lang-btn @(isAr ? "" : "active")" title="English">
+                    <img src="~/images/flags/gb.svg" alt="English" class="flag-icon" />
+                </a>
+                <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="ar" asp-route-returnUrl="@returnUrl"
+                   class="lang-btn @(isAr ? "active" : "")" title="العربية">
+                    <img src="~/images/flags/sy.svg" alt="العربية" class="flag-icon" />
+                </a>
+            </div>
+            <form asp-controller="Culture" asp-action="SetCurrency" method="post" class="d-flex align-items-center gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                <label class="text-white-50 mb-0"><i class="bi bi-currency-exchange"></i> @Localizer["Currency"]</label>
+                <select name="currency" class="currency-select" onchange="this.form.submit()" title="@Localizer["Currency"]">
+                    @foreach (var c in Currency.GetSupportedCurrencies())
+                    {
+                        if (Currency.CurrentCurrency == c.Code)
+                        {
+                            <option value="@c.Code" selected>@c.Code (@c.Symbol)</option>
+                        }
+                        else
+                        {
+                            <option value="@c.Code">@c.Code (@c.Symbol)</option>
+                        }
+                    }
+                </select>
+                @if (Currency.RatesLastUpdated.HasValue)
+                {
+                    <small class="text-white-50 d-none d-md-inline rate-hint" title="@Currency.RatesSource">
+                        <i class="bi bi-arrow-repeat"></i> @Localizer["RatesUpdated"]: @Currency.RatesLastUpdated.Value.ToLocalTime().ToString("g")
+                    </small>
+                }
+            </form>
+        </div>
     </div>
+
+    <nav class="store-navbar navbar navbar-expand-lg">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <img src="~/images/image/logo.png" width="32" height="32" class="me-1" alt="Logo" />
+                <span class="brand-sager">Sager</span><span class="brand-shop">Shop</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="@Localizer["Menu"]">
+                <i class="bi bi-list text-white fs-4"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @Localizer["Home"]</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Shop"><i class="bi bi-shop"></i> @Localizer["Shop"]</a></li>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Order" asp-action="Index"><i class="bi bi-bag-check"></i> @Localizer["Orders"]</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart"></i> @Localizer["Wishlist"]</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Profile" asp-action="Index"><i class="bi bi-person"></i> @Localizer["MyAccount"]</a></li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle"></i> @Localizer["About"]</a></li>
+                    }
+                </ul>
+                <form class="search-form d-flex me-3" asp-controller="Home" asp-action="Search" method="get">
+                    <input name="q" type="text" class="form-control form-control-sm" placeholder="@Localizer["SearchPlaceholder"]" />
+                    <button type="submit" title="@Localizer["Search"]"><i class="bi bi-search"></i></button>
+                </form>
+                <ul class="navbar-nav align-items-center">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        @await Component.InvokeAsync("NotificationBell")
+                    }
+                    <li class="nav-item me-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var count = HttpContextAccessor.HttpContext?.Session.GetInt32(Diger.ssShoppingCart) ?? 0;
+                            <a asp-controller="Cart" asp-action="Index" class="nav-link" title="@Localizer["Cart"]">
+                                <i class="bi bi-cart3 fs-5"></i><span class="cart-badge">@count</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Identity/Account/Login" class="nav-link" title="@Localizer["Cart"]">
+                                <i class="bi bi-cart3 fs-5"></i><span class="cart-badge">0</span>
+                            </a>
+                        }
+                    </li>
+                    <partial name="_LoginPartial" />
+                </ul>
+            </div>
+        </div>
+    </nav>
 }
-    

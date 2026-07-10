@@ -1,0 +1,67 @@
+@model webShopping.Models.OrderHeader
+@{
+    var bankInfo = LocalizedContent.BankTransferInfo(Site.Settings, Localizer);
+    ViewData["Title"] = Localizer["OrderPlacedPendingPayment"];
+}
+
+<div class="success-card">
+    <div class="success-icon"><i class="bi bi-bag-check-fill"></i></div>
+    <h2 class="fw-bold mb-2">@Localizer["OrderPlacedPendingPayment"]</h2>
+    <p class="text-muted mb-3">@Localizer["BankTransferAfterOrderNote"]</p>
+    <div class="bg-light rounded p-3 mb-4 text-start">
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">@Localizer["OrderNumber"]</span>
+            <strong>#@Model.Id</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">@Localizer["OrderDate"]</span>
+            <span>@Model.orderDate.ToString("dd MMM yyyy HH:mm")</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">@Localizer["Subtotal"]</span>
+            <span>@Currency.Format(Model.SubtotalUsd > 0 ? Model.SubtotalUsd : Model.orderTotal)</span>
+        </div>
+        @if (Model.ShippingUsd > 0)
+        {
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">@Localizer["Shipping"]</span>
+                <span>@Currency.Format(Model.ShippingUsd)</span>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">@Localizer["Shipping"]</span>
+                <span>@Localizer["FreeShipping"]</span>
+            </div>
+        }
+        @if (Model.VatUsd > 0)
+        {
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">@Localizer["Vat"]</span>
+                <span>@Currency.Format(Model.VatUsd)</span>
+            </div>
+        }
+        <div class="d-flex justify-content-between border-top pt-2">
+            <span class="text-muted">@Localizer["Total"]</span>
+            <strong class="text-danger">@Currency.Format(Model.orderTotal)</strong>
+        </div>
+    </div>
+
+    @await Html.PartialAsync("_BankTransferInfo", bankInfo)
+
+    @if (Model.orderStatus == Diger.status_awaiting_payment)
+    {
+        @await Html.PartialAsync("_PaymentConfirmationForm", Model)
+    }
+
+    <p class="small text-muted mt-4 mb-4"><i class="bi bi-envelope"></i> @Localizer["OrderConfirmationEmailSent"]</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+        <a asp-controller="Order" asp-action="Index" class="btn btn-accent px-4">
+            <i class="bi bi-bag-check"></i> @Localizer["ViewOrders"]
+        </a>
+        <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-shop"></i> @Localizer["ContinueShopping"]
+        </a>
+    </div>
+</div>

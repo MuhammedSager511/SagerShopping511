@@ -1,0 +1,36 @@
+@model webShopping.Models.Product
+
+@{
+    var name = LocalizedContent.ProductName(Model, Localizer);
+    var desc = LocalizedContent.ProductDescription(Model, Localizer);
+}
+
+<div class="product-card">
+    <a asp-controller="Home" asp-action="Details" asp-route-id="@Model.Id">
+        @if (Model.Path == null)
+        {
+            <img src="~/images/image/oip.jpg" class="product-card-img" alt="@name" loading="lazy" />
+        }
+        else
+        {
+            <img src="~/files/@Model.Path" class="product-card-img" alt="@name" loading="lazy" />
+        }
+    </a>
+    <div class="product-card-body">
+        <div class="product-card-title">@name</div>
+        @if (Model.categoty != null)
+        {
+            <small class="text-muted mb-1">@LocalizedContent.CategoryName(Model.categoty, Localizer)</small>
+        }
+        <p class="product-card-desc">@desc</p>
+        <span class="stock-badge @(Model.IsStock ? "stock-in" : "stock-out")">
+            @(Model.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
+        </span>
+    </div>
+    <div class="product-card-footer">
+        <span class="product-price">@Currency.Format(Model.Price)</span>
+        <a asp-controller="Home" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-accent btn-sm">
+            <i class="bi bi-eye"></i> @Localizer["Details"]
+        </a>
+    </div>
+</div>

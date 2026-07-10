@@ -1,23 +1,19 @@
 ﻿@page
 @model RegisterConfirmationModel
 @{
-    ViewData["Title"] = "Register confirmation";
+    ViewData["Title"] = Localizer["RegisterConfirmationTitle"];
 }
 
-<h1>@ViewData["Title"]</h1>
-@{
-    if (@Model.DisplayConfirmAccountLink)
-    {
-<p>
-    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-    Normally this would be emailed: <a id="confirm-link" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
-</p>
-    }
-    else
-    {
-<p>
-        Please check your email to confirm your account.
-</p>
-    }
-}
-
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="auth-card global-card p-4 text-center">
+            <h2 class="fw-bold mb-2">@Localizer["RegisterConfirmationTitle"]</h2>
+            <p class="text-muted">@Localizer["RegisterConfirmationBody"]</p>
+            @if (Model.EmailConfirmationUrl != null)
+            {
+                <p class="small">@Localizer["DevelopmentModeLink"] <a href="@Model.EmailConfirmationUrl">@Localizer["ConfirmEmailLink"]</a></p>
+            }
+            <a asp-page="./Login" class="btn btn-accent mt-2">@Localizer["SignIn"]</a>
+        </div>
+    </div>
+</div>

@@ -1,95 +1,65 @@
 ﻿@page
 @model LoginModel
-
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = Localizer["Login"];
 }
 
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
-        <section>
-            <h2 style="text-align:center ;color:green">Login Form</h2>
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div class="col-md-4">
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">
-                                article
-                                about setting up this ASP.NET application to support logging in via external services
-                            </a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" style="width:49%;font-size:15px ;color:black" width="30px" class="btn btn-outline-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
-                                        @if (provider.Name == "Facebook")
-                                        {
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+        <div class="auth-card global-card p-4">
+            <div class="text-center mb-4">
+                <img src="~/images/image/logo.png" width="48" height="48" alt="SagerShop" class="mb-2" />
+                <h2 class="fw-bold mb-1">@Localizer["LoginTitle"]</h2>
+                <p class="text-muted small mb-0">@Localizer["GlobalStore"]</p>
+            </div>
 
-
-                                            <img src="~/images/image/fe.png" width="22px" height="25px" /> <!-- FontAwesome Facebook Icon -->
-                                        }
-                                        else if (provider.Name == "Google")
-                                        {
-
-
-                                            <img src="~/images/image/google.png" width="25px" />
-                                        }
-
-
-                                    </button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-
-                }
+            @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+            {
+                <p class="text-center text-muted small">@Localizer["OrContinueWith"]</p>
+                <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="d-flex gap-2 justify-content-center mb-3">
+                    @foreach (var provider in Model.ExternalLogins!)
+                    {
+                        <button type="submit" class="btn btn-outline-secondary auth-social-btn" name="provider" value="@provider.Name" title="@provider.DisplayName">
+                            @if (provider.Name == "Facebook")
+                            {
+                                <img src="~/images/image/fe.png" width="22" height="22" alt="Facebook" />
+                            }
+                            else if (provider.Name == "Google")
+                            {
+                                <img src="~/images/image/google.png" width="22" height="22" alt="Google" />
+                            }
+                        </button>
+                    }
+                </form>
+                <hr />
             }
-        </section>
-        <section>
+
             <form id="account" method="post">
-
-
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Email" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="@Localizer["Email"]" />
+                    <label asp-for="Input.Email">@Localizer["Email"]</label>
                     <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="@Localizer["Password"]" />
+                    <label asp-for="Input.Password">@Localizer["Password"]</label>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label class="form-check-label" asp-for="Input.RememberMe">@Localizer["RememberMe"]</label>
                 </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">I forgot my password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Sign up</a>
-                    </p>
-
+                <button type="submit" class="btn btn-accent w-100 btn-lg mb-3">
+                    <i class="bi bi-box-arrow-in-right"></i> @Localizer["SignIn"]
+                </button>
+                <div class="text-center small">
+                    <a asp-page="./ForgotPassword">@Localizer["ForgotPassword"]</a>
+                    <span class="mx-1">·</span>
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">@Localizer["SignUp"]</a>
                 </div>
             </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
+        </div>
     </div>
 </div>
 

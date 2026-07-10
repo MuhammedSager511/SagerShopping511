@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Shop" xml:space="preserve"><value>Shop</value></data>
+  <data name="Orders" xml:space="preserve"><value>Orders</value></data>
+  <data name="Cart" xml:space="preserve"><value>Cart</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Search products...</value></data>
+  <data name="FeaturedProducts" xml:space="preserve"><value>Featured Products</value></data>
+  <data name="ShopAll" xml:space="preserve"><value>Shop All</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="AddToCart" xml:space="preserve"><value>Add to Cart</value></data>
+  <data name="OutOfStock" xml:space="preserve"><value>Out of Stock</value></data>
+  <data name="InStock" xml:space="preserve"><value>In Stock</value></data>
+  <data name="AllProducts" xml:space="preserve"><value>All Products</value></data>
+  <data name="Categories" xml:space="preserve"><value>Categories</value></data>
+  <data name="SortBy" xml:space="preserve"><value>Sort by</value></data>
+  <data name="PriceLowHigh" xml:space="preserve"><value>Price: Low to High</value></data>
+  <data name="PriceHighLow" xml:space="preserve"><value>Price: High to Low</value></data>
+  <data name="NameAZ" xml:space="preserve"><value>Name: A-Z</value></data>
+  <data name="NoProducts" xml:space="preserve"><value>No products found.</value></data>
+  <data name="GlobalStore" xml:space="preserve"><value>Global E-Commerce</value></data>
+  <data name="HeroTitle" xml:space="preserve"><value>Discover Premium Products Worldwide</value></data>
+  <data name="HeroSubtitle" xml:space="preserve"><value>Shop with confidence — fast delivery, secure checkout, multi-currency support.</value></data>
+  <data name="OrderConfirmed" xml:space="preserve"><value>Order Confirmed!</value></data>
+  <data name="ThankYou" xml:space="preserve"><value>Thank you for your purchase.</value></data>
+  <data name="ViewOrders" xml:space="preserve"><value>View My Orders</value></data>
+  <data name="ContinueShopping" xml:space="preserve"><value>Continue Shopping</value></data>
+  <data name="About" xml:space="preserve"><value>About</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="FreeShipping" xml:space="preserve"><value>Free Shipping</value></data>
+  <data name="SecurePayment" xml:space="preserve"><value>Secure Payment</value></data>
+  <data name="Support247" xml:space="preserve"><value>24/7 Support</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Users" xml:space="preserve"><value>Users</value></data>
+  <data name="Manage" xml:space="preserve"><value>Manage</value></data>
+  <data name="OrderStatus" xml:space="preserve"><value>Order Status</value></data>
+  <data name="Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Confirmed" xml:space="preserve"><value>Confirmed</value></data>
+  <data name="Shipped" xml:space="preserve"><value>Shipped</value></data>
+  <data name="Revenue" xml:space="preserve"><value>Revenue</value></data>
+  <data name="RecentOrders" xml:space="preserve"><value>Recent Orders</value></data>
+  <data name="AddUser" xml:space="preserve"><value>Add User</value></data>
+</root>

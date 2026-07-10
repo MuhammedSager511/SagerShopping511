@@ -1,53 +1,26 @@
-﻿@model IEnumerable<webShopping.Models.Product>
+@model IEnumerable<webShopping.Models.Product>
+
 @{
-    ViewData["Title"] = "CategoryDetails";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Categories"];
 }
 
-
-<div class="container">
-    <div class=" row">
-
-        @await Component.InvokeAsync("CategoryList")
-        @if (Model.Count() > 0)
+<div class="row g-4">
+    @await Component.InvokeAsync("CategoryList")
+    <div class="col-md-9">
+        @if (Model.Any())
         {
-            @foreach (var item in Model)
-            {
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-header">
-                            @item.Name
-                        </div>
-                        <div>
-                            @if (item.Path == null)
-                            {
-                                <img src="~/images/image/oip.jpg" class="card-img-top" width="150px" height="200px" />
-                            }
-                            else
-                            {
-                                <img src="~/files/@item.Path" class="card-img-top" width="150px" height="200px" />
-                            }
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">@item.Description</p>
-                        </div>
-                        <div class="card-footer">
-                            <label style="font-size: 20px; color: crimson;"><b>@item.Price.ToString("0.00") $</b></label>
-                            <a asp-action="Details" asp-controller="Home" asp-route-id="@item.Id" class="btn btn-outline-info" style="float: right;">Details  </a>
-                        </div>
+            <div class="row g-4">
+                @foreach (var item in Model)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <partial name="_ProductCard" model="item" />
                     </div>
-                    <br />
-                </div>
-
-            }
+                }
+            </div>
         }
         else
-            {
-                <div class="alert alert-warning text-center col-md-9">
-
-                There are no products....
-                </div>
-            }
-
+        {
+            <div class="alert alert-warning text-center py-4">@Localizer["NoProducts"]</div>
+        }
     </div>
 </div>

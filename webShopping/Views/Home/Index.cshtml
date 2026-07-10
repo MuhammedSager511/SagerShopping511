@@ -1,83 +1,61 @@
 ﻿@model IEnumerable<webShopping.Models.Product>
-
-
+@inject ISiteContentService Site
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = Localizer["Home"];
+    int totalPages = ViewData["TotalPages"] != null ? (int)ViewData["TotalPages"] : 1;
+    int currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
+    var s = Site.Settings;
 }
-<div class="container">
-    <div class="row">
-        
-            @await Component.InvokeAsync("CategoryList")
-        
-     
-        @foreach (var item in Model)
-        {
-            <div class="col-md-3">
-                <div class="card" >
-                    <div class="card-header">
-                        @item.Name
-                    </div>
-                    <div>
-                        @if (item.Path == null)
-                        {
-                            <img src="~/images/image/oip.jpg" class="card-img-top" width="150px" height="200px" />
-                        }
-                        else
-                        {
-                            <img src="~/files/@item.Path" class="card-img-top" width="150px" height="250px" />
-                        }
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text" style="overflow-y: auto; height: 60px;">@item.Description</p>
-                    </div>
-                    <div class="card-footer">
-                        <label style="font-size: 20px; color: crimson;"><b>@item.Price.ToString("0.00") $</b></label>
-                        <a asp-action="Details" asp-controller="Home" asp-route-id="@item.Id" class="btn btn-outline-info" style="float: right;"><i class="bi bi-eye-fill"></i> Details</a>
-                    </div>
-                </div>
-                <br />
-            </div>
-        }
+
+<div class="hero-banner">
+    <h1>@Site.T(s.HeroTitleEn, s.HeroTitleAr)</h1>
+    <p>@Site.T(s.HeroSubtitleEn, s.HeroSubtitleAr)</p>
+    <div class="trust-badges">
+        <div class="trust-badge"><i class="bi bi-truck"></i> @Localizer["FreeShipping"]</div>
+        <div class="trust-badge"><i class="bi bi-shield-lock"></i> @Localizer["SecurePayment"]</div>
+        <div class="trust-badge"><i class="bi bi-headset"></i> @Localizer["Support247"]</div>
     </div>
+    <a asp-action="Shop" class="btn btn-accent mt-3 px-4 py-2">
+        <i class="bi bi-shop"></i> @Localizer["ShopAll"]
+    </a>
+</div>
 
-    <!-- Bootstrap Pagination -->
-    <nav aria-label="Page navigation example">
+<div class="section-title">
+    <i class="bi bi-stars text-warning"></i> @Localizer["FeaturedProducts"]
+</div>
+
+<div class="row g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col-6 col-md-4 col-lg-3">
+            <partial name="_ProductCard" model="item" />
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center mt-3">@Localizer["NoProducts"]</div>
+}
+
+@if (totalPages > 1)
+{
+    <nav class="mt-4">
         <ul class="pagination justify-content-center">
-            @{
-                int totalPages = ViewData["TotalPages"] != null ? (int)ViewData["TotalPages"] : 1;
-                int currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
-            }
-
-            <!-- زر السابق -->
             @if (currentPage > 1)
             {
-                <li class="page-item">
-                    <a class="page-link" href="?page=@(currentPage - 1)" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
-                    </a>
-                </li>
+                <li class="page-item"><a class="page-link" href="?page=@(currentPage - 1)">&laquo;</a></li>
             }
-
-            <!-- أزرار الصفحات -->
             @for (int i = 1; i <= totalPages; i++)
             {
                 <li class="page-item @(i == currentPage ? "active" : "")">
                     <a class="page-link" href="?page=@i">@i</a>
                 </li>
             }
-
-            <!-- زر التالي -->
             @if (currentPage < totalPages)
             {
-                <li class="page-item">
-                    <a class="page-link" href="?page=@(currentPage + 1)" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">Next</span>
-                    </a>
-                </li>
+                <li class="page-item"><a class="page-link" href="?page=@(currentPage + 1)">&raquo;</a></li>
             }
         </ul>
     </nav>
-</div>
-
+}

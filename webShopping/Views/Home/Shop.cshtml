@@ -1,0 +1,70 @@
+@model IEnumerable<webShopping.Models.Product>
+
+@{
+    ViewData["Title"] = Localizer["Shop"];
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Localizer["Shop"], null)
+    };
+    int totalPages = ViewData["TotalPages"] != null ? (int)ViewData["TotalPages"] : 1;
+    int currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
+    var sort = ViewData["Sort"]?.ToString() ?? "newest";
+    var q = ViewData["Query"]?.ToString();
+}
+
+<div class="row g-4">
+    @await Component.InvokeAsync("CategoryList")
+
+    <div class="col-md-9">
+        <div class="shop-toolbar">
+            <span class="fw-bold"><i class="bi bi-grid"></i> @Localizer["Shop"]</span>
+            <form asp-action="Shop" method="get" class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+                <input type="hidden" name="categoryId" value="@ViewBag.KategoryId" />
+                <input type="text" name="q" value="@q" class="form-control form-control-sm" style="width:180px" placeholder="@Localizer["SearchPlaceholder"]" />
+                <select name="sort" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+                    <option value="newest" selected="@(sort == "newest")">@Localizer["SortBy"]</option>
+                    <option value="price_asc" selected="@(sort == "price_asc")">@Localizer["PriceLowHigh"]</option>
+                    <option value="price_desc" selected="@(sort == "price_desc")">@Localizer["PriceHighLow"]</option>
+                    <option value="name" selected="@(sort == "name")">@Localizer["NameAZ"]</option>
+                </select>
+                <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-search"></i></button>
+            </form>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <partial name="_ProductCard" model="item" />
+                </div>
+            }
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-warning text-center">@Localizer["NoProducts"]</div>
+        }
+
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (currentPage > 1)
+                    {
+                        <li class="page-item"><a class="page-link" href="?page=@(currentPage-1)&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">&laquo;</a></li>
+                    }
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?page=@i&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">@i</a>
+                        </li>
+                    }
+                    @if (currentPage < totalPages)
+                    {
+                        <li class="page-item"><a class="page-link" href="?page=@(currentPage+1)&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">&raquo;</a></li>
+                    }
+                </ul>
+            </nav>
+        }
+    </div>
+</div>

@@ -10,17 +10,7 @@ namespace webShopping.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Products_OrderHeaders_orderHeaderId",
-                table: "Products");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Products_orderHeaderId",
-                table: "Products");
-
-            migrationBuilder.DropColumn(
-                name: "orderHeaderId",
-                table: "Products");
+            // orderHeaderId was never added in prior migrations; schema already matches the model.
         }
 
         /// <inheritdoc />

@@ -1,130 +1,205 @@
 ﻿@model webShopping.Models.ShoppingCart
+@using System.Text.Json
 
 @{
-    ViewData["Title"] = "Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    var product = Model.Product;
+    if (product == null)
+    {
+        <div class="empty-state global-card p-5 text-center">
+            <p>@Localizer["ToastProductUnavailable"]</p>
+            <a asp-action="Shop" class="btn btn-accent">@Localizer["ShopAll"]</a>
+        </div>
+        return;
+    }
+    var name = LocalizedContent.ProductName(product, Localizer);
+    var desc = LocalizedContent.ProductDescription(product, Localizer);
+    ViewData["Title"] = name;
+    var reviews = ViewBag.Reviews as IEnumerable<webShopping.Models.ProductReview> ?? Enumerable.Empty<webShopping.Models.ProductReview>();
+    var avgRating = (double)(ViewBag.AvgRating ?? 0d);
+    var images = product.Images?.OrderBy(i => i.SortOrder).ToList() ?? new List<webShopping.Models.ProductImage>();
+    var schema = new Dictionary<string, object?>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "Product",
+        ["name"] = name,
+        ["description"] = desc,
+        ["image"] = product.Path != null ? $"{Context.Request.Scheme}://{Context.Request.Host}/files/{product.Path}" : null,
+        ["offers"] = new Dictionary<string, object>
+        {
+            ["@type"] = "Offer",
+            ["priceCurrency"] = "USD",
+            ["price"] = product.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+            ["availability"] = product.IsStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+        }
+    };
+    if (reviews.Any())
+    {
+        schema["aggregateRating"] = new Dictionary<string, object>
+        {
+            ["@type"] = "AggregateRating",
+            ["ratingValue"] = avgRating.ToString("F1", System.Globalization.CultureInfo.InvariantCulture),
+            ["reviewCount"] = reviews.Count()
+        };
+    }
 }
 
+@section Meta {
+    <script type="application/ld+json">@Html.Raw(JsonSerializer.Serialize(schema))</script>
+}
 
-
-<div class="container">
-    <br />
-    <div class="row">
-        <form method="post">
-            <input hidden asp-for="ProductId" />
-
-          <div class="card mb-12" >
-             <div class="row g-0">
-                    <div class="col-md-4">
-                      @*   <img src="~/files/@Model.Product.Path" class="img-fluid rounded-start"  height="300px"> *@
-                        @if (Model.Product.Path == null)
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card border-0 shadow-sm global-card">
+            <div class="row g-0">
+                <div class="col-md-5">
+                        @if (images.Any())
                         {
-                            <img src="~/images/image/oip.jpg" class="card-img-top" height="300px" />
+                            <div id="productGallery" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    @for (var i = 0; i < images.Count; i++)
+                                    {
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            <img src="~/files/@images[i].Path" class="d-block w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
+                                        </div>
+                                    }
+                                </div>
+                                @if (images.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#productGallery" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#productGallery" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                                }
+                            </div>
+                        }
+                        else if (product.Path == null)
+                        {
+                            <img src="~/images/image/oip.jpg" class="img-fluid rounded-start w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
                         }
                         else
                         {
-                            <img src="~/files/@Model.Product.Path" class="card-img-top" height="300px" />
+                            <img src="~/files/@product.Path" class="img-fluid rounded-start w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
                         }
                     </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
+                    <div class="col-md-7 p-4">
+                        @if (product.categoty != null)
+                        {
+                            <span class="badge bg-secondary mb-2">@LocalizedContent.CategoryName(product.categoty, Localizer)</span>
+                        }
+                        <h2 class="fw-bold mb-2">@name</h2>
+                        @if (reviews.Any())
+                        {
+                            <div class="mb-2 text-warning">
+                                @for (var s = 1; s <= 5; s++)
+                                {
+                                    <i class="bi @(s <= Math.Round(avgRating) ? "bi-star-fill" : "bi-star")"></i>
+                                }
+                                <small class="text-muted ms-1">(@reviews.Count() @Localizer["Reviews"])</small>
+                            </div>
+                        }
+                        <div class="mb-3">
+                            <span class="stock-badge @(product.IsStock ? "stock-in" : "stock-out")">
+                                @(product.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
+                            </span>
+                        </div>
+                        <p class="text-muted">@desc</p>
+                        <div class="product-price fs-2 mb-1">@Currency.Format(product.Price)</div>
+                        <small class="text-muted d-block mb-4">@Localizer["StoredInUsd"]: $@product.Price.ToString("N2")</small>
 
-                            <dl class="row">
-                                <dt class="col-sm-3 text-primary">
-                               Stock :
-                                </dt>
-
-                                <dd class="col-sm-8">
-
-                                    @if (Model.Product.IsStock)
-                                    {
-                                        <label class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i>Yes</label>
-                                    }
-                                    else
-                                    {
-                                        <label class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i>No</label>
-                                    }
-                                </dd>
-                             
-                         
-
-
-                           
-                                <dt class="col-sm-3">
-                                    Name :
-                                </dt>
-                                <dd class="col-sm-9">
-                                
-                                        @Model.Product.Name
-                                </dd>
-                               
-                          
-
-                         
-                                <dt class="col-sm-3">
-                                    Description :
-                                </dt>
-                                <dd class="col-sm-9">
-                                
-                                        @Model.Product.Description
-                                </dd>
-                              
-                          
-                                <dt class="col-sm-3">
-                                    Price :
-                                </dt>
-                                <dd class="col-sm-9">
-                              
-                                        @Model.Product.Price.ToString("0.00") $
-                          
-                                </dd>
-
-                           
-
-                                <dt class="col-sm-3">
-                                    Count :
-                                </dt>
-                                <dd class="col-sm-9">
-                                  
-                                        <input asp-for="Count" class="form-control" />
-                                    
-                                </dd>
-
-
-
-
-                         </dl>
-                          
+                        <div class="row align-items-end g-3 mb-3">
+                            <div class="col-auto">
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form method="post" asp-action="Details" asp-route-id="@product.Id" class="d-flex flex-wrap gap-2 align-items-end">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ProductId" value="@product.Id" />
+                                        <div>
+                                            <label class="form-label fw-semibold">@Localizer["Quantity"]</label>
+                                            <input name="Count" type="number" min="1" value="1" class="form-control" style="width:80px" required />
+                                        </div>
+                                        @if (product.IsStock)
+                                        {
+                                            <button type="submit" class="btn btn-accent px-4 py-2">
+                                                <i class="bi bi-cart-plus"></i> @Localizer["AddToCart"]
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-secondary px-4 py-2" disabled>@Localizer["OutOfStock"]</button>
+                                        }
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-accent px-4 py-2">
+                                        <i class="bi bi-box-arrow-in-right"></i> @Localizer["SignInToBuy"]
+                                    </a>
+                                }
+                            </div>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="col-auto">
+                                    <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-heart-fill"></i> @Localizer["Wishlist"]</button>
+                                    </form>
+                                </div>
+                            }
+                            <div class="col-auto">
+                                <a asp-action="Shop" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> @Localizer["Shop"]</a>
+                            </div>
                         </div>
                     </div>
-              
-             <br  />
-                <div class="col-md-1">
-
-                </div>
-                    <div class="col-md-3" style="margin:5px">
-                    <a asp-action="Index" asp-controller="Home" class="btn btn-primary form-control"><i class="bi bi-house-door"></i> Home</a>
-                </div>
-                <div class="col-md-4">
-
-                </div>
-                    <div class="col-md-3" style="margin:5px">
-
-                    @if (Model.Product.IsStock)
-                    {
-                            <button class="btn btn-success form-control"><i class="bi bi-cart-plus"></i> Add to Cart</button>
-                    }
-                    else
-                    {
-                            <label class="btn btn-danger form-control"><i class="bi bi-cart-plus"></i> Product Out of Stock</label>
-                    }
-                </div>  
-
-                <div class="col-md-1">
-
                 </div>
             </div>
-          </div>
-        </form>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="global-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">@Localizer["WriteReview"]</h5>
+                <form asp-action="AddReview" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@product.Id" />
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label">@Localizer["Rating"]</label>
+                            <select name="rating" class="form-select" required>
+                                @for (var r = 5; r >= 1; r--)
+                                {
+                                    <option value="@r">@r ★</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">@Localizer["Comment"]</label>
+                            <input name="comment" class="form-control" required maxlength="500" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-accent w-100">@Localizer["SubmitReview"]</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        }
+
+        @if (reviews.Any())
+        {
+            <div class="global-card p-4 mt-4">
+                <h5 class="fw-bold mb-3">@Localizer["CustomerReviews"]</h5>
+                @foreach (var review in reviews)
+                {
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="text-warning">
+                            @for (var s = 1; s <= 5; s++)
+                            {
+                                <i class="bi @(s <= review.Rating ? "bi-star-fill" : "bi-star")"></i>
+                            }
+                        </div>
+                        <strong>@review.UserName</strong>
+                        <small class="text-muted ms-2">@review.CreatedAt.ToString("dd/MM/yyyy")</small>
+                        <p class="mb-0 mt-1">@review.Comment</p>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>

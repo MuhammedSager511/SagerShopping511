@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Home" xml:space="preserve"><value>الرئيسية</value></data>
+  <data name="Shop" xml:space="preserve"><value>المتجر</value></data>
+  <data name="Orders" xml:space="preserve"><value>طلباتي</value></data>
+  <data name="Cart" xml:space="preserve"><value>السلة</value></data>
+  <data name="Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>ابحث عن منتجات...</value></data>
+  <data name="FeaturedProducts" xml:space="preserve"><value>منتجات مميزة</value></data>
+  <data name="ShopAll" xml:space="preserve"><value>تسوق الكل</value></data>
+  <data name="Details" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="AddToCart" xml:space="preserve"><value>أضف للسلة</value></data>
+  <data name="OutOfStock" xml:space="preserve"><value>غير متوفر</value></data>
+  <data name="InStock" xml:space="preserve"><value>متوفر</value></data>
+  <data name="AllProducts" xml:space="preserve"><value>كل المنتجات</value></data>
+  <data name="Categories" xml:space="preserve"><value>الفئات</value></data>
+  <data name="SortBy" xml:space="preserve"><value>ترتيب حسب</value></data>
+  <data name="PriceLowHigh" xml:space="preserve"><value>السعر: من الأقل للأعلى</value></data>
+  <data name="PriceHighLow" xml:space="preserve"><value>السعر: من الأعلى للأقل</value></data>
+  <data name="NameAZ" xml:space="preserve"><value>الاسم: أ-ي</value></data>
+  <data name="NoProducts" xml:space="preserve"><value>لا توجد منتجات.</value></data>
+  <data name="GlobalStore" xml:space="preserve"><value>متجر عالمي</value></data>
+  <data name="HeroTitle" xml:space="preserve"><value>اكتشف منتجات مميزة من حول العالم</value></data>
+  <data name="HeroSubtitle" xml:space="preserve"><value>تسوق بثقة — توصيل سريع، دفع آمن، دعم عملات متعددة.</value></data>
+  <data name="OrderConfirmed" xml:space="preserve"><value>تم تأكيد الطلب!</value></data>
+  <data name="ThankYou" xml:space="preserve"><value>شكراً لشرائك.</value></data>
+  <data name="ViewOrders" xml:space="preserve"><value>عرض طلباتي</value></data>
+  <data name="ContinueShopping" xml:space="preserve"><value>متابعة التسوق</value></data>
+  <data name="About" xml:space="preserve"><value>من نحن</value></data>
+  <data name="Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Currency" xml:space="preserve"><value>العملة</value></data>
+  <data name="FreeShipping" xml:space="preserve"><value>شحن مجاني</value></data>
+  <data name="SecurePayment" xml:space="preserve"><value>دفع آمن</value></data>
+  <data name="Support247" xml:space="preserve"><value>دعم 24/7</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
+  <data name="Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="Manage" xml:space="preserve"><value>إدارة</value></data>
+  <data name="OrderStatus" xml:space="preserve"><value>حالة الطلبات</value></data>
+  <data name="Pending" xml:space="preserve"><value>قيد الانتظار</value></data>
+  <data name="Confirmed" xml:space="preserve"><value>مؤكد</value></data>
+  <data name="Shipped" xml:space="preserve"><value>تم الشحن</value></data>
+  <data name="Revenue" xml:space="preserve"><value>الإيرادات</value></data>
+  <data name="RecentOrders" xml:space="preserve"><value>أحدث الطلبات</value></data>
+  <data name="AddUser" xml:space="preserve"><value>إضافة مستخدم</value></data>
+</root>

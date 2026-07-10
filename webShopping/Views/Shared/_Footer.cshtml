@@ -1,0 +1,54 @@
+@inject ISiteContentService Site
+@{
+    var s = Site.Settings;
+}
+<footer class="site-footer">
+    <div class="container-fluid px-lg-4">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h6><span style="color:#fff">Sager</span><span style="color:var(--accent)">Shop</span></h6>
+                <p class="small">@Site.T(s.FooterTextEn, s.FooterTextAr)</p>
+                <div class="d-flex gap-3 mt-2">
+                    @if (!string.IsNullOrEmpty(s.FacebookUrl) && s.FacebookUrl != "#")
+                    { <a href="@s.FacebookUrl" target="_blank"><i class="bi bi-facebook fs-5"></i></a> }
+                    @if (!string.IsNullOrEmpty(s.InstagramUrl) && s.InstagramUrl != "#")
+                    { <a href="@s.InstagramUrl" target="_blank"><i class="bi bi-instagram fs-5"></i></a> }
+                    @if (!string.IsNullOrEmpty(s.TwitterUrl) && s.TwitterUrl != "#")
+                    { <a href="@s.TwitterUrl" target="_blank"><i class="bi bi-twitter-x fs-5"></i></a> }
+                    @if (!string.IsNullOrEmpty(s.WhatsAppUrl) && s.WhatsAppUrl != "#")
+                    { <a href="@s.WhatsAppUrl" target="_blank"><i class="bi bi-whatsapp fs-5"></i></a> }
+                </div>
+            </div>
+            <div class="col-md-2">
+                <h6>@Localizer["QuickLinks"]</h6>
+                <ul class="list-unstyled">
+                    @foreach (var link in Site.QuickLinks)
+                    {
+                        <li><a href="@link.Url">@Site.T(link.TitleEn, link.TitleAr)</a></li>
+                    }
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>@Localizer["Contact"]</h6>
+                <ul class="list-unstyled small">
+                    <li><i class="bi bi-envelope me-1"></i> <a href="mailto:@s.ContactEmail">@s.ContactEmail</a></li>
+                    <li><i class="bi bi-telephone me-1"></i> @s.ContactPhone</li>
+                    <li><i class="bi bi-geo-alt me-1"></i> @Site.T(s.ContactAddressEn, s.ContactAddressAr)</li>
+                    <li><i class="bi bi-clock me-1"></i> @Site.T(s.ContactHoursEn, s.ContactHoursAr)</li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>@Localizer["About"]</h6>
+                <p class="small">@Site.T(s.AboutBodyEn, s.AboutBodyAr)</p>
+                <a asp-controller="Home" asp-action="About" class="small">@Localizer["ReadMore"] &rarr;</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; @DateTime.Now.Year SagerShop. @Localizer["GlobalStore"].
+            <a asp-controller="Home" asp-action="Terms" class="ms-2">@Localizer["TermsOfUse"]</a>
+            <a asp-controller="Home" asp-action="Refund" class="ms-2">@Localizer["RefundPolicy"]</a>
+            <a asp-controller="Order" asp-action="Track" class="ms-2">@Localizer["TrackOrder"]</a>
+            <a asp-controller="Home" asp-action="Privacy" class="ms-2">@Localizer["PrivacyPolicy"]</a>
+        </div>
+    </div>
+</footer>

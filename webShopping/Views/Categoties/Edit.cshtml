@@ -1,36 +1,33 @@
-﻿@model webShopping.Models.Categoty
-
+@model webShopping.Models.Categoty
 @{
-    ViewData["Title"] = "Edit";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Edit"];
 }
 
-
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                Category Name
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-group">
-                <input type="submit" value='Edit' class="btn btn-success" />
-                <a asp-action="Index" class="btn btn-primary">Category Details</a>
-            </div>
-        </form>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="global-card p-4">
+            <h4 class="fw-bold mb-3">@Localizer["Edit"] @Localizer["Categories"]</h4>
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">@Localizer["CategoryName"] (EN)</label>
+                    <input asp-for="Name" class="form-control" required />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="NameAr" class="form-label">@Localizer["NameAr"]</label>
+                    <input asp-for="NameAr" class="form-control" dir="rtl" />
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-</div>
-
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

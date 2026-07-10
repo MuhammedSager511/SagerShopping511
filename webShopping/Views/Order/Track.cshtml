@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = Localizer["TrackOrderTitle"];
+    var order = ViewBag.TrackedOrder as webShopping.Models.OrderHeader;
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Localizer["TrackOrderTitle"], null)
+    };
+}
+
+<div class="section-title mb-4"><i class="bi bi-geo-alt"></i> @Localizer["TrackOrderTitle"]</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="global-card p-4 mb-4">
+            <p class="text-muted small mb-3">@Localizer["TrackOrderSubtitle"]</p>
+            <form asp-action="Track" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["OrderNumber"]</label>
+                    <input type="number" name="orderId" class="form-control" min="1" required value="@(order?.Id)" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Email"]</label>
+                    <input type="email" name="email" class="form-control" required />
+                </div>
+                <button type="submit" class="btn btn-accent w-100">@Localizer["TrackOrder"]</button>
+            </form>
+        </div>
+
+        @if (order != null)
+        {
+            <div class="global-card p-4">
+                <h5 class="fw-bold mb-3">@Localizer["OrderNumber"]#@order.Id</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">@Localizer["Status"]</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge @OrderStatusHelper.BadgeClass(order.orderStatus)">
+                            @OrderStatusHelper.Label(Localizer, order.orderStatus)
+                        </span>
+                    </dd>
+                    <dt class="col-sm-4 text-muted">@Localizer["OrderDate"]</dt>
+                    <dd class="col-sm-8">@order.orderDate.ToString("dd/MM/yyyy HH:mm")</dd>
+                    @if (!string.IsNullOrEmpty(order.TrackingNumber))
+                    {
+                        <dt class="col-sm-4 text-muted">@Localizer["TrackingNumber"]</dt>
+                        <dd class="col-sm-8"><code class="fs-6">@order.TrackingNumber</code></dd>
+                    }
+                    <dt class="col-sm-4 text-muted">@Localizer["Total"]</dt>
+                    <dd class="col-sm-8 fw-bold text-danger">@Currency.Format(order.orderTotal)</dd>
+                </dl>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm mt-3">@Localizer["Details"]</a>
+                }
+            </div>
+        }
+    </div>
+</div>

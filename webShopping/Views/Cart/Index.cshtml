@@ -1,99 +1,81 @@
-﻿@model webShopping.Models.ShoppingCartVM
+@model webShopping.Models.ShoppingCartVM
+
 @{
-    ViewData["Title"] = "Index";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Cart"];
 }
-<form method="post">
-    @if (Model.ListCart.Count()>0)
-    {
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12">
-                    <br />
-                    <table class="table table-striped table-bordered" id="myTable">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left;">Image</th>
-                                <th>Name</th>
-                                <th>Count</th>
-                                <th style="text-align: left;">Price</th>
-                                <th style="text-align: left;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model.ListCart)
+
+@if (Model.ListCart.Any())
+{
+    <div class="section-title"><i class="bi bi-cart3"></i> @Localizer["Cart"]</div>
+    <div class="cart-table">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>@Localizer["ProductImage"]</th>
+                    <th>@Localizer["Name"]</th>
+                    <th>@Localizer["Count"]</th>
+                    <th>@Localizer["Price"]</th>
+                    <th>@Localizer["Total"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ListCart)
+                {
+                    <tr>
+                        <td>
+                            @if (item.Product.Path == null)
                             {
-                                <tr>
-                                    <td style="text-align: left;">
-                                        @if (item.Product.Path == null)
-                                        {
-                                            <img src="~/images/image/oip.jpg" width="60px" />
-                                        }
-                                        else
-                                        {
-                                            <img src="~/files/@item.Product.Path" width="60px" height="43px" />
-                                        }
-                                    </td>
-                                    <td>@item.Product.Name</td>
-                                    <td>
-                                        <div class="btn-group me-2" role="group" aria-label="Quantity">
-                                            <input type="text" style="max-width:50px;  class="form-control" value="@item.Count"/>
-                                            <button asp-action="Decrease" asp-route-cartId="@item.Id" class="btn btn-danger"><i class="bi bi-dash"></i></button>
-                                            <button asp-action="Add" asp-route-cartId="@item.Id" class="btn btn-primary"><i class="bi bi-plus"></i></button>
-                                            <button asp-action="Remove" asp-route-cartId="@item.Id" class="btn btn-danger"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                    <td style="text-align: left;">
-                                        @item.Product.Price.ToString("0.00") $
-
-                                    </td>
-                                    <td style="text-align: left;">
-                                        @((item.Count * item.Product.Price).ToString("0.00")) $
-                                    </td>
-                                </tr>
+                                <img src="~/images/image/oip.jpg" width="60" height="45" style="object-fit:cover;border-radius:6px" />
                             }
-
-                            <tr>
-                                <td colspan="4" style="text-align:right"><strong>Total Amount =</strong></td>
-                                <td style="background-color:darkred"><span style="font-size:large;color:white">@Model.OrderHeader.orderTotal.ToString("0.00") $</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="row">
-                   
-                    <div class="col-md-4">
-                            <a asp-action="Index" asp-controller="Home" class="btn btn-primary form-control"><i class="bi bi-house-door"></i> Home</a>
-                    </div>
-
-                    <div class="col-md-4">
-                    </div>
-
-
-                    <div class="col-md-4">
-                     @*    @if(!Model.OrderHeader.ApplicationUser.EmailConfirmed)
-                        {
-                                <div>
-                                    <button type="submit" class="btn btn-warning form-control text-white">Please click to confirm your email...</button>
-                                </div>
-                      }else{ *@
-                            <a asp-action="Summary" asp-controller="Cart" class="btn btn-success form-control">Order</a>
-                        
-                        </div>
-                    </div>
-
-                </div>
-            </div>
+                            else
+                            {
+                                <img src="~/files/@item.Product.Path" width="60" height="45" style="object-fit:cover;border-radius:6px" />
+                            }
+                        </td>
+                        <td class="fw-semibold">@item.Product.Name</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="Decrease" asp-route-cartId="@item.Id" class="btn btn-outline-danger"><i class="bi bi-dash"></i></a>
+                                <span class="btn btn-light disabled">@item.Count</span>
+                                <a asp-action="Add" asp-route-cartId="@item.Id" class="btn btn-outline-primary"><i class="bi bi-plus"></i></a>
+                                <a asp-action="Remove" asp-route-cartId="@item.Id" class="btn btn-outline-danger"><i class="bi bi-trash"></i></a>
+                            </div>
+                        </td>
+                        <td>@Currency.Format(item.Product.Price)</td>
+                        <td class="fw-bold">@Currency.Format(item.Count * item.Product.Price)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-light">
+                    <td colspan="4" class="text-end fw-bold fs-5">@Localizer["Total"]</td>
+                    <td class="fw-bold fs-5 text-danger">@Currency.Format(Model.OrderHeader.orderTotal)</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <div class="row mt-4 g-3">
+        <div class="col-md-4">
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-secondary form-control">
+                <i class="bi bi-arrow-left"></i> @Localizer["ContinueShopping"]
+            </a>
         </div>
-    }
-    else
-    {
-        <div class=" carousel " style="text-align:center; font-size:30px; background-color:tomato">
-            There are no items in your cart...
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <a asp-action="Summary" class="btn btn-accent form-control py-2">
+                <i class="bi bi-credit-card"></i> @Localizer["Checkout"]
+            </a>
         </div>
-        <br />
-        <div class="col-md-12">
-            <a asp-action="Index" asp-controller="Home" class="btn btn-primary form-control"><i class="bi bi-house-door"></i> Home</a>
-        </div>
-    }
-
-</form>
+    </div>
+}
+else
+{
+    <div class="cart-empty">
+        <i class="bi bi-cart-x"></i>
+        <h4>@Localizer["EmptyCart"]</h4>
+        <p class="text-muted">@Localizer["CartEmptyMessage"]</p>
+        <a asp-controller="Home" asp-action="Shop" class="btn btn-accent mt-2">
+            <i class="bi bi-shop"></i> @Localizer["ShopAll"]
+        </a>
+    </div>
+}

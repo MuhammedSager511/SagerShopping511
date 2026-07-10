@@ -1,0 +1,193 @@
+@model webShopping.Models.SiteSettings
+@{
+    ViewData["Title"] = Localizer["SiteSettings"];
+    var links = (IEnumerable<webShopping.Models.QuickLink>)ViewBag.QuickLinks;
+}
+
+<div class="section-title mb-4"><i class="bi bi-gear"></i> @Localizer["SiteSettings"]</div>
+
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#texts">@Localizer["Texts"]</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#about">@Localizer["About"]</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#contact">@Localizer["Contact"]</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bank">@Localizer["BankAccounts"]</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#links">@Localizer["QuickLinks"]</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#legal">@Localizer["LegalPages"]</button></li>
+</ul>
+
+<form asp-action="Index" method="post">
+    @Html.AntiForgeryToken()
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="texts">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <h6 class="fw-bold mb-3">@Localizer["HeroTitle"]</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">English</label>
+                        <input asp-for="HeroTitleEn" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">العربية</label>
+                        <input asp-for="HeroTitleAr" class="form-control" dir="rtl" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Subtitle EN</label>
+                        <textarea asp-for="HeroSubtitleEn" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Subtitle AR</label>
+                        <textarea asp-for="HeroSubtitleAr" class="form-control" rows="2" dir="rtl"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Footer EN</label>
+                        <input asp-for="FooterTextEn" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Footer AR</label>
+                        <input asp-for="FooterTextAr" class="form-control" dir="rtl" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="about">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Title EN</label>
+                        <input asp-for="AboutTitleEn" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Title AR</label>
+                        <input asp-for="AboutTitleAr" class="form-control" dir="rtl" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">About EN</label>
+                        <textarea asp-for="AboutBodyEn" class="form-control" rows="6"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">About AR</label>
+                        <textarea asp-for="AboutBodyAr" class="form-control" rows="6" dir="rtl"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="contact">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["Email"]</label>
+                        <input asp-for="ContactEmail" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["Phone"]</label>
+                        <input asp-for="ContactPhone" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Address EN</label>
+                        <input asp-for="ContactAddressEn" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Address AR</label>
+                        <input asp-for="ContactAddressAr" class="form-control" dir="rtl" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hours EN</label>
+                        <input asp-for="ContactHoursEn" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hours AR</label>
+                        <input asp-for="ContactHoursAr" class="form-control" dir="rtl" />
+                    </div>
+                    <div class="col-md-6"><label class="form-label">Facebook</label><input asp-for="FacebookUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Instagram</label><input asp-for="InstagramUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">Twitter/X</label><input asp-for="TwitterUrl" class="form-control" /></div>
+                    <div class="col-md-6"><label class="form-label">WhatsApp</label><input asp-for="WhatsAppUrl" class="form-control" /></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="bank">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <p class="text-muted small mb-3">@Localizer["BankAccountsHint"]</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["BankAccounts"] (EN)</label>
+                        <textarea asp-for="BankTransferInfoEn" class="form-control font-monospace" rows="10"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["BankAccounts"] (AR)</label>
+                        <textarea asp-for="BankTransferInfoAr" class="form-control font-monospace" rows="10" dir="rtl"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="links">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <p class="text-muted small">@Localizer["QuickLinksHint"]</p>
+                <table class="table table-sm">
+                    <thead><tr><th>EN</th><th>AR</th><th>URL</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var link in links)
+                        {
+                            <tr>
+                                <td>@link.TitleEn</td>
+                                <td>@link.TitleAr</td>
+                                <td><code>@link.Url</code></td>
+                                <td>
+                                    <form asp-action="DeleteQuickLink" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@link.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="legal">
+            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+                <h6 class="fw-bold mb-3">@Localizer["TermsOfUse"]</h6>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="TermsTitleEn" class="form-label">Title EN</label><input asp-for="TermsTitleEn" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="TermsTitleAr" class="form-label">العنوان</label><input asp-for="TermsTitleAr" class="form-control" dir="rtl" /></div>
+                    <div class="col-md-6"><label asp-for="TermsBodyEn" class="form-label">Body EN</label><textarea asp-for="TermsBodyEn" class="form-control" rows="6"></textarea></div>
+                    <div class="col-md-6"><label asp-for="TermsBodyAr" class="form-label">المحتوى</label><textarea asp-for="TermsBodyAr" class="form-control" rows="6" dir="rtl"></textarea></div>
+                </div>
+                <h6 class="fw-bold mb-3 mt-4">@Localizer["RefundPolicy"]</h6>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="RefundTitleEn" class="form-label">Title EN</label><input asp-for="RefundTitleEn" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="RefundTitleAr" class="form-label">العنوان</label><input asp-for="RefundTitleAr" class="form-control" dir="rtl" /></div>
+                    <div class="col-md-6"><label asp-for="RefundBodyEn" class="form-label">Body EN</label><textarea asp-for="RefundBodyEn" class="form-control" rows="6"></textarea></div>
+                    <div class="col-md-6"><label asp-for="RefundBodyAr" class="form-label">المحتوى</label><textarea asp-for="RefundBodyAr" class="form-control" rows="6" dir="rtl"></textarea></div>
+                </div>
+                <h6 class="fw-bold mb-3 mt-4">@Localizer["PrivacyPolicy"]</h6>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="PrivacyTitleEn" class="form-label">Title EN</label><input asp-for="PrivacyTitleEn" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="PrivacyTitleAr" class="form-label">العنوان</label><input asp-for="PrivacyTitleAr" class="form-control" dir="rtl" /></div>
+                    <div class="col-md-6"><label asp-for="PrivacyBodyEn" class="form-label">Body EN</label><textarea asp-for="PrivacyBodyEn" class="form-control" rows="6"></textarea></div>
+                    <div class="col-md-6"><label asp-for="PrivacyBodyAr" class="form-label">المحتوى</label><textarea asp-for="PrivacyBodyAr" class="form-control" rows="6" dir="rtl"></textarea></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-accent btn-lg"><i class="bi bi-save"></i> @Localizer["Save"]</button>
+</form>
+
+<div class="card border-0 shadow-sm p-4 mt-4" style="border-radius:12px">
+    <h6 class="fw-bold mb-3">@Localizer["AddQuickLink"]</h6>
+    <form asp-action="AddQuickLink" method="post" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
+        <div class="col-md-3"><input name="TitleEn" class="form-control" placeholder="Title EN" required /></div>
+        <div class="col-md-3"><input name="TitleAr" class="form-control" placeholder="العنوان" dir="rtl" required /></div>
+        <div class="col-md-3"><input name="Url" class="form-control" placeholder="/Home/Shop" required /></div>
+        <div class="col-md-2"><input name="SortOrder" type="number" class="form-control" value="10" /></div>
+        <div class="col-md-1"><button type="submit" class="btn btn-success w-100"><i class="bi bi-plus"></i></button></div>
+    </form>
+</div>

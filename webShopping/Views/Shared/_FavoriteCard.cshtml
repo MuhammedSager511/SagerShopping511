@@ -1,0 +1,63 @@
+@model webShopping.Models.WishlistItem
+@{
+    var product = Model.Product;
+    var name = LocalizedContent.ProductName(product, Localizer);
+    var desc = LocalizedContent.ProductDescription(product, Localizer);
+}
+
+<div class="col-md-6 col-lg-4">
+    <div class="favorite-card global-card h-100">
+        <div class="favorite-card-image">
+            <a asp-controller="Home" asp-action="Details" asp-route-id="@product.Id">
+                @if (product.Path == null)
+                {
+                    <img src="~/images/image/oip.jpg" alt="@name" loading="lazy" />
+                }
+                else
+                {
+                    <img src="~/files/@product.Path" alt="@name" loading="lazy" />
+                }
+            </a>
+            <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="favorite-remove-btn">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@product.Id" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                <button type="submit" class="btn btn-sm btn-light" title="@Localizer["RemoveFromFavorites"]">
+                    <i class="bi bi-heart-fill text-danger"></i>
+                </button>
+            </form>
+        </div>
+        <div class="favorite-card-body">
+            @if (product.categoty != null)
+            {
+                <small class="text-muted">@LocalizedContent.CategoryName(product.categoty, Localizer)</small>
+            }
+            <h6 class="favorite-card-title">
+                <a asp-controller="Home" asp-action="Details" asp-route-id="@product.Id">@name</a>
+            </h6>
+            <p class="favorite-card-desc">@desc</p>
+            <div class="d-flex align-items-center justify-content-between mt-auto">
+                <span class="product-price">@Currency.Format(product.Price)</span>
+                <span class="stock-badge @(product.IsStock ? "stock-in" : "stock-out")">
+                    @(product.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
+                </span>
+            </div>
+        </div>
+        <div class="favorite-card-footer">
+            <a asp-controller="Home" asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-eye"></i> @Localizer["Details"]
+            </a>
+            @if (product.IsStock)
+            {
+                <form asp-controller="Home" asp-action="Details" asp-route-id="@product.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Scart.ProductId" value="@product.Id" />
+                    <input type="hidden" name="Scart.Count" value="1" />
+                    <button type="submit" class="btn btn-accent btn-sm">
+                        <i class="bi bi-cart-plus"></i> @Localizer["AddToCart"]
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,18 @@
+@if (ViewBag.Breadcrumbs is IEnumerable<(string Label, string? Url)> crumbs)
+{
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-3">
+        <ol class="breadcrumb mb-0">
+            @foreach (var (label, url) in crumbs)
+            {
+                if (url != null)
+                {
+                    <li class="breadcrumb-item"><a href="@url">@label</a></li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item active" aria-current="page">@label</li>
+                }
+            }
+        </ol>
+    </nav>
+}

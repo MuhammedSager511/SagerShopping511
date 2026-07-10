@@ -1,83 +1,101 @@
-﻿@model webShopping.Models.Product
-
+@model webShopping.Models.Product
 @{
-    ViewData["Title"] = "Edit";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Edit"];
 }
 
+<div class="section-title mb-4"><i class="bi bi-pencil"></i> @Localizer["Edit"] @Localizer["Products"]</div>
 
-
-<div class="row">
-    <div class="col-md-4">
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="global-card p-4">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="All" class="alert alert-danger"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label">@Localizer["Name"] (EN)</label>
+                        <input asp-for="Name" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NameAr" class="form-label">@Localizer["NameAr"]</label>
+                        <input asp-for="NameAr" class="form-control" dir="rtl" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Price" class="form-label">@Localizer["Price"] (@Localizer["PriceInUsd"])</label>
+                        <input asp-for="Price" class="form-control" type="number" step="0.01" min="0.01" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CategoryId" class="form-label">@Localizer["Categories"]</label>
+                        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["ProductImage"]</label>
+                        <input type="file" name="File" class="form-control" accept=".jpeg,.jpg,.png,.gif,.webp" />
+                        <small class="text-muted">@Localizer["ImageOptional"]</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["GalleryImages"]</label>
+                        <input type="file" name="galleryFiles" class="form-control" accept=".jpeg,.jpg,.png,.webp" multiple />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label">@Localizer["Description"] (EN)</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="DescriptionAr" class="form-label">@Localizer["DescriptionAr"]</label>
+                        <textarea asp-for="DescriptionAr" class="form-control" rows="3" dir="rtl"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="IsHome" />
+                            <label class="form-check-label" asp-for="IsHome">@Localizer["Featured"]</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="IsStock" />
+                            <label class="form-check-label" asp-for="IsStock">@Localizer["InStock"]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="col-md-4">
-        <h4 class="text-success">Edit Product</h4>
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label">Product Name</label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            @*   <div class="form-group">
-            <label asp-for="Path" class="control-label"></label>
-            <input asp-for="Path" class="form-control" />
-            <span asp-validation-for="Path" class="text-danger"></span>
-            </div> *@
-            <div class="form-group">
-                <label asp-for="Price" class="control-label">Price</label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="File" class="control-label">Iamge</label>
-
-                <input type="file" name="File" class="form-control" accept=".jpeg, .jpg, .png, .gif" />
-                <span asp-validation-for="File" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label">Description</label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsHome" /> Home
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsStock" /> Stock
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="CategoryId" class="control-label">Category</label>
-                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId"></select>
-            </div>
-            <br />
-            <div class="form-group">
-                <input type="submit" value="Edit" class="btn btn-success" />
-                 <a asp-action="Index" class="btn btn-primary">Product Details</a>
-            </div>
-        </form>
-    </div>
-    <div class="col-md-4">
-     
-        @if (Model.Path == null)
-        {
-            <img src="~/images/image/oip.jpg" width="250px" height="200px" />
-        }
-        else
-        {
-            <img src="~/files/@Model.Path"  width="250px" height="200px" />
-        }
+    <div class="col-lg-4">
+        <div class="global-card p-3 text-center">
+            @if (string.IsNullOrEmpty(Model.Path))
+            {
+                <img src="~/images/image/oip.jpg" class="img-fluid rounded" alt="@Model.Name" loading="lazy" />
+            }
+            else
+            {
+                <img src="~/files/@Model.Path" class="img-fluid rounded" alt="@Model.Name" loading="lazy" />
+            }
+            @if (Model.Images?.Any() == true)
+            {
+                <div class="d-flex flex-wrap gap-2 mt-3 justify-content-center">
+                    @foreach (var img in Model.Images.OrderBy(i => i.SortOrder))
+                    {
+                        <div class="position-relative">
+                            <img src="~/files/@img.Path" class="rounded" style="width:64px;height:64px;object-fit:cover" loading="lazy" alt="" />
+                            <form asp-action="DeleteImage" method="post" class="position-absolute top-0 end-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="imageId" value="@img.Id" />
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger btn-sm p-0 px-1" style="font-size:10px;line-height:1.2" title="@Localizer["DeleteImage"]" onclick="return confirm('@Localizer["ConfirmDelete"]');">×</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
     </div>
 </div>
 
->
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }

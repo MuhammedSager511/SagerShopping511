@@ -1,0 +1,76 @@
+@model IEnumerable<webShopping.Models.ProductReview>
+@{
+    ViewData["Title"] = Localizer["ReviewsAdmin"];
+    var filter = ViewBag.Filter as string ?? "pending";
+}
+
+<div class="section-title mb-4">
+    <i class="bi bi-star"></i> @Localizer["ReviewsAdmin"]
+    @if ((int)(ViewBag.PendingCount ?? 0) > 0)
+    {
+        <span class="badge bg-warning text-dark ms-2">@ViewBag.PendingCount @Localizer["PendingReviews"]</span>
+    }
+</div>
+
+<div class="mb-3 btn-group">
+    <a asp-action="Index" asp-route-filter="pending" class="btn btn-sm @(filter == "pending" ? "btn-accent" : "btn-outline-secondary")">@Localizer["PendingReviews"]</a>
+    <a asp-action="Index" asp-route-filter="approved" class="btn btn-sm @(filter == "approved" ? "btn-accent" : "btn-outline-secondary")">@Localizer["ApprovedReviews"]</a>
+    <a asp-action="Index" asp-route-filter="all" class="btn btn-sm @(filter == "all" ? "btn-accent" : "btn-outline-secondary")">@Localizer["AllReviews"]</a>
+</div>
+
+<div class="global-card">
+    @if (!Model.Any())
+    {
+        <div class="empty-state p-4"><p>@Localizer["NoReviews"]</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table global-table mb-0">
+                <thead>
+                    <tr>
+                        <th>@Localizer["Products"]</th>
+                        <th>@Localizer["Customer"]</th>
+                        <th>@Localizer["Rating"]</th>
+                        <th>@Localizer["Comment"]</th>
+                        <th>@Localizer["Status"]</th>
+                        <th>@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@LocalizedContent.ProductName(r.Product, Localizer)</td>
+                            <td>@r.UserName</td>
+                            <td>@r.Rating ★</td>
+                            <td class="small">@r.Comment</td>
+                            <td>
+                                <span class="badge @(r.IsApproved ? "bg-success" : "bg-warning text-dark")">
+                                    @(r.IsApproved ? Localizer["Confirmed"] : Localizer["Pending"])
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+                                @if (!r.IsApproved)
+                                {
+                                    <form asp-action="Approve" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@r.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success">@Localizer["ApproveReview"]</button>
+                                    </form>
+                                }
+                                <form asp-action="Delete" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('@Localizer["ConfirmDelete"]');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

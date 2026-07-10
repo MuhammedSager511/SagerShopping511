@@ -1,0 +1,59 @@
+@model IEnumerable<webShopping.Models.OrderHeader>
+
+<div class="card border-0 shadow-sm global-card">
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>@Localizer["NoOrders"]</p>
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-accent btn-sm">@Localizer["ShopAll"]</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 global-table" id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>@Localizer["OrderNumber"]</th>
+                        <th>@Localizer["Name"]</th>
+                        <th>@Localizer["Phone"]</th>
+                        <th>@Localizer["OrderDate"]</th>
+                        <th>@Localizer["Total"]</th>
+                        <th>@Localizer["Status"]</th>
+                        <th>@Localizer["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">#@item.Id</td>
+                            <td>@item.Name @item.LastName</td>
+                            <td>@item.PhoneNumber</td>
+                            <td>@item.orderDate.ToString("dd/MM/yyyy")</td>
+                            <td class="fw-bold text-danger">@Currency.Format(item.orderTotal)</td>
+                            <td>
+                                <span class="badge @OrderStatusHelper.BadgeClass(item.orderStatus)">
+                                    @OrderStatusHelper.Label(Localizer, item.orderStatus)
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> @Localizer["Details"]
+                                </a>
+                                @if (User.IsInRole(Diger.Role_Admin))
+                                {
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('@Localizer["ConfirmDelete"]');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

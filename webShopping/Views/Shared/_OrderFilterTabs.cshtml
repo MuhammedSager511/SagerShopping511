@@ -1,0 +1,20 @@
+@model string
+
+<div class="d-flex flex-wrap gap-2 mb-3 order-filter-tabs">
+    <a asp-action="pending" asp-controller="Order"
+       class="btn btn-sm @(Model == "pending" ? "btn-accent" : "btn-outline-primary")">
+        @Localizer["BacklogOrders"]
+    </a>
+    <a asp-action="confirmed" asp-controller="Order"
+       class="btn btn-sm @(Model == "confirmed" ? "btn-accent" : "btn-outline-primary")">
+        @Localizer["ConfirmedOrders"]
+    </a>
+    <a asp-action="cargo" asp-controller="Order"
+       class="btn btn-sm @(Model == "cargo" ? "btn-accent" : "btn-outline-primary")">
+        @Localizer["ShippedOrders"]
+    </a>
+    <a asp-action="Index" asp-controller="Order"
+       class="btn btn-sm @(Model == "all" ? "btn-accent" : "btn-outline-primary")">
+        @Localizer["AllOrders"]
+    </a>
+</div>

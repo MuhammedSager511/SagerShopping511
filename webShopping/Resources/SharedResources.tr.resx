@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Home" xml:space="preserve"><value>Ana Sayfa</value></data>
+  <data name="Shop" xml:space="preserve"><value>Mağaza</value></data>
+  <data name="Orders" xml:space="preserve"><value>Siparişler</value></data>
+  <data name="Cart" xml:space="preserve"><value>Sepet</value></data>
+  <data name="Search" xml:space="preserve"><value>Ara</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Ürün ara...</value></data>
+  <data name="FeaturedProducts" xml:space="preserve"><value>Öne Çıkan Ürünler</value></data>
+  <data name="ShopAll" xml:space="preserve"><value>Tümünü Gör</value></data>
+  <data name="Details" xml:space="preserve"><value>Detaylar</value></data>
+  <data name="AddToCart" xml:space="preserve"><value>Sepete Ekle</value></data>
+  <data name="OutOfStock" xml:space="preserve"><value>Stokta Yok</value></data>
+  <data name="InStock" xml:space="preserve"><value>Stokta Var</value></data>
+  <data name="AllProducts" xml:space="preserve"><value>Tüm Ürünler</value></data>
+  <data name="Categories" xml:space="preserve"><value>Kategoriler</value></data>
+  <data name="SortBy" xml:space="preserve"><value>Sırala</value></data>
+  <data name="PriceLowHigh" xml:space="preserve"><value>Fiyat: Düşükten Yükseğe</value></data>
+  <data name="PriceHighLow" xml:space="preserve"><value>Fiyat: Yüksekten Düşüğe</value></data>
+  <data name="NameAZ" xml:space="preserve"><value>İsim: A-Z</value></data>
+  <data name="NoProducts" xml:space="preserve"><value>Ürün bulunamadı.</value></data>
+  <data name="GlobalStore" xml:space="preserve"><value>Küresel Mağaza</value></data>
+  <data name="HeroTitle" xml:space="preserve"><value>Dünya Çapında Premium Ürünleri Keşfedin</value></data>
+  <data name="HeroSubtitle" xml:space="preserve"><value>Güvenle alışveriş yapın — hızlı teslimat, güvenli ödeme, çoklu para birimi.</value></data>
+  <data name="OrderConfirmed" xml:space="preserve"><value>Sipariş Onaylandı!</value></data>
+  <data name="ThankYou" xml:space="preserve"><value>Satın aldığınız için teşekkürler.</value></data>
+  <data name="ViewOrders" xml:space="preserve"><value>Siparişlerimi Gör</value></data>
+  <data name="ContinueShopping" xml:space="preserve"><value>Alışverişe Devam</value></data>
+  <data name="About" xml:space="preserve"><value>Hakkımızda</value></data>
+  <data name="Language" xml:space="preserve"><value>Dil</value></data>
+  <data name="Currency" xml:space="preserve"><value>Para Birimi</value></data>
+  <data name="FreeShipping" xml:space="preserve"><value>Ücretsiz Kargo</value></data>
+  <data name="SecurePayment" xml:space="preserve"><value>Güvenli Ödeme</value></data>
+  <data name="Support247" xml:space="preserve"><value>7/24 Destek</value></data>
+</root>

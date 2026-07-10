@@ -10,6 +10,8 @@ using NToastNotify;
 using webShopping.Data;
 using webShopping.Models;
 
+using webShopping.Services;
+
 namespace webShopping.Controllers
 {
     [Authorize(Roles = Diger.Role_Admin)]
@@ -17,11 +19,13 @@ namespace webShopping.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IToastNotification toast;
+        private readonly IAppLocalizer _localizer;
 
-        public CategotiesController(ApplicationDbContext context,IToastNotification toast)
+        public CategotiesController(ApplicationDbContext context, IToastNotification toast, IAppLocalizer localizer)
         {
             _context = context;
             this.toast = toast;
+            _localizer = localizer;
         }
 
         // GET: Categoties
@@ -65,7 +69,7 @@ namespace webShopping.Controllers
             {
                 _context.Add(categoty);
                 await _context.SaveChangesAsync();
-                toast.AddSuccessToastMessage("Added successfully....");
+                toast.AddSuccessToastMessage(_localizer["ToastCategoryAdded"]);
                 return RedirectToAction(nameof(Index));
             }
             return View(categoty);
@@ -105,7 +109,7 @@ namespace webShopping.Controllers
                 {
                     _context.Update(categoty);
                     await _context.SaveChangesAsync();
-                    toast.AddSuccessToastMessage("Modified successfully....");
+                    toast.AddSuccessToastMessage(_localizer["ToastCategoryUpdated"]);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -153,6 +157,7 @@ namespace webShopping.Controllers
             }
 
             await _context.SaveChangesAsync();
+            toast.AddSuccessToastMessage(_localizer["ToastCategoryDeleted"]);
             return RedirectToAction(nameof(Index));
         }
 

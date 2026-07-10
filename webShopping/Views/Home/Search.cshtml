@@ -1,56 +1,42 @@
-﻿@model IEnumerable<webShopping.Models.Product>
+@model IEnumerable<webShopping.Models.Product>
+
 @{
-    ViewData["Title"] = "Search";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Search"];
+    var query = ViewData["Query"]?.ToString();
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Localizer["Search"], null)
+    };
 }
 
-
-
-<div class="container">
-    <div class=" row">
-
-        @await Component.InvokeAsync("CategoryList")
-        @if (Model.Count() > 0)
-        {
-            @foreach (var item in Model)
+<div class="row g-4">
+    @await Component.InvokeAsync("CategoryList")
+    <div class="col-md-9">
+        <div class="section-title">
+            <i class="bi bi-search"></i> @Localizer["Search"]
+            @if (!string.IsNullOrEmpty(query))
             {
-                <div class="col-md-3">
-                    <div class="card" style="height:450px">
-                        <div class="card-header">
-                            @item.Name
-                        </div>
-                        <div>
-                            @if (item.Path == null)
-                            {
-                                <img src="~/images/image/oip.jpg" class="card-img-top" width="150px" height="200px" />
-                            }
-                            else
-                            {
-                                <img src="~/files/@item.Path" class="card-img-top" width="150px" height="250px" />
-                            }
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text" style="overflow-y: auto; height: 60px;">@item.Description</p>
-                        </div>
-                        <div class="card-footer">
-                            <label style="font-size: 20px; color: crimson;"><b>@item.Price.ToString("0.00") $</b></label>
-                            <a asp-action="Details" asp-controller="Home" asp-route-id="@item.Id" class="btn btn-outline-info" style="float: right;"><i class="bi bi-eye-fill"></i> Details</a>
-                        </div>
-                    </div>
-                    <br />
-                </div>
-
+                <small class="text-muted fw-normal">? "@query"</small>
             }
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="row g-4">
+                @foreach (var item in Model)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <partial name="_ProductCard" model="item" />
+                    </div>
+                }
+            </div>
         }
         else
         {
-            <div class="alert alert-warning text-center col-md-9">
-
-                There are no products....
+            <div class="empty-state global-card">
+                <i class="bi bi-search"></i>
+                <p>@Localizer["NoProducts"]</p>
             </div>
         }
-
     </div>
 </div>
-
-

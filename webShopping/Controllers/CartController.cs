@@ -1,316 +1,751 @@
-﻿using Iyzipay;
-using Iyzipay.Model;
-using Iyzipay.Request;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
+﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.WebUtilities;
+
 using Microsoft.EntityFrameworkCore;
+
 using NToastNotify;
-using System.ComponentModel.DataAnnotations;
+
 using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
+
 using webShopping.Data;
+
 using webShopping.Models;
 
+using webShopping.Services;
+
+
+
 namespace webShopping.Controllers
+
 {
+
+    [Authorize]
+
     public class CartController : Controller
+
     {
+
         private readonly ApplicationDbContext db;
-        private readonly IEmailSender emailSender;
+
         private readonly IToastNotification toast;
-        private readonly UserManager<IdentityUser> userManager;
+
+        private readonly ICurrencyService _currency;
+
+        private readonly IAppLocalizer _localizer;
+
+        private readonly IIyzipayCheckoutService _iyzipay;
+
+        private readonly IShippingService _shipping;
+
+        private readonly IOrderNotificationService _notifications;
+
+        private readonly IPayPalCheckoutService _paypal;
+
+
 
         [BindProperty]
-        public  ShoppingCartVM ShoppingCartVM { get; set; }
-        public CartController(ApplicationDbContext db,
-                             IEmailSender emailSender,
-                             UserManager<IdentityUser> userManager,
-                             IToastNotification toast)
+
+        public ShoppingCartVM ShoppingCartVM { get; set; } = new();
+
+
+
+        [BindProperty]
+
+        public bool AcceptTerms { get; set; }
+
+
+
+        public CartController(
+
+            ApplicationDbContext db,
+
+            IToastNotification toast,
+
+            ICurrencyService currency,
+
+            IAppLocalizer localizer,
+
+            IIyzipayCheckoutService iyzipay,
+
+            IShippingService shipping,
+
+            IOrderNotificationService notifications,
+
+            IPayPalCheckoutService paypal)
+
         {
+
             this.db = db;
-            this.emailSender = emailSender;
+
             this.toast = toast;
-            this.userManager = userManager;
+
+            _currency = currency;
+
+            _localizer = localizer;
+
+            _iyzipay = iyzipay;
+
+            _shipping = shipping;
+
+            _notifications = notifications;
+
+            _paypal = paypal;
+
         }
+
+
+
         public IActionResult Index()
+
         {
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            ShoppingCartVM = new ShoppingCartVM()
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null) return Challenge();
+
+
+
+            ShoppingCartVM = new ShoppingCartVM
+
             {
-                OrderHeader=new Models.OrderHeader(),
-                ListCart=db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value).Include(i=>i.Product)
+
+                OrderHeader = new OrderHeader(),
+
+                ListCart = db.ShoppingCarts
+
+                    .Where(i => i.ApplicationUserId == userId)
+
+                    .Include(i => i.Product)
+
             };
+
             ShoppingCartVM.OrderHeader.orderTotal = 0;
-            ShoppingCartVM.OrderHeader.ApplicationUser = db.ApplicationUsers.FirstOrDefault(i => i.Id == claim.Value);
+
+            ShoppingCartVM.OrderHeader.ApplicationUser = db.Users.FirstOrDefault(i => i.Id == userId);
+
+
 
             foreach (var item in ShoppingCartVM.ListCart)
-            {
-                ShoppingCartVM.OrderHeader.orderTotal += (item.Count * item.Product.Price);
-            }
-           
+
+                ShoppingCartVM.OrderHeader.orderTotal += item.Count * item.Product.Price;
+
+
+
+            HttpContext.Session.SetInt32(Diger.ssShoppingCart, ShoppingCartVM.ListCart.Count());
+
             return View(ShoppingCartVM);
+
         }
-        /// <summary>
-        /// اضافة منتج الى سلة 
-        /// </summary>
-        /// <param name="cartId"></param>
-        /// <returns></returns>
+
+
+
         public IActionResult Add(int cartId)
+
         {
-            var cart= db.ShoppingCarts.FirstOrDefault(i=>i.Id == cartId);
+
+            var cart = db.ShoppingCarts.FirstOrDefault(i => i.Id == cartId);
+
+            if (cart == null) return RedirectToAction(nameof(Index));
+
+
+
             cart.Count += 1;
+
             db.SaveChanges();
+
             return RedirectToAction(nameof(Index));
+
         }
-        /// <summary>
-        /// تقليل منتج من سلة
-        /// </summary>
-        /// <param name="cartId"></param>
-        /// <returns></returns>
+
+
+
         public IActionResult Decrease(int cartId)
+
         {
+
             var cart = db.ShoppingCarts.FirstOrDefault(i => i.Id == cartId);
-            if (cart.Count==1)
-            {
-                var count = db.ShoppingCarts.Where(i => i.ApplicationUserId == cart.ApplicationUserId).ToList().Count();
+
+            if (cart == null) return RedirectToAction(nameof(Index));
+
+
+
+            if (cart.Count == 1)
+
                 db.ShoppingCarts.Remove(cart);
-                db.SaveChanges();
-                HttpContext.Session.SetInt32(Diger.ssShoppingCart,count-1);
-            }else
-            {
+
+            else
+
                 cart.Count -= 1;
-                db.SaveChanges();
-            }
-          
+
+
+
+            db.SaveChanges();
+
+            var userId = cart.ApplicationUserId;
+
+            HttpContext.Session.SetInt32(Diger.ssShoppingCart, db.ShoppingCarts.Count(i => i.ApplicationUserId == userId));
+
             return RedirectToAction(nameof(Index));
+
         }
 
-        /// <summary>
-        /// حذف منتج من السلة
-        /// </summary>
-        /// <param name="cartId"></param>
-        /// <returns></returns>
+
+
         public IActionResult Remove(int cartId)
+
         {
+
             var cart = db.ShoppingCarts.FirstOrDefault(i => i.Id == cartId);
-    
-            
-                var count = db.ShoppingCarts.Where(i => i.ApplicationUserId == cart.ApplicationUserId).ToList().Count();
-                db.ShoppingCarts.Remove(cart);
-                db.SaveChanges();
-              HttpContext.Session.SetInt32(Diger.ssShoppingCart, count - 1);
-            
-          
+
+            if (cart == null) return RedirectToAction(nameof(Index));
+
+
+
+            var userId = cart.ApplicationUserId;
+
+            db.ShoppingCarts.Remove(cart);
+
+            db.SaveChanges();
+
+            HttpContext.Session.SetInt32(Diger.ssShoppingCart, db.ShoppingCarts.Count(i => i.ApplicationUserId == userId));
 
             return RedirectToAction(nameof(Index));
+
         }
+
+
 
         public IActionResult Summary()
+
         {
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            ShoppingCartVM = new ShoppingCartVM()
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null) return Challenge();
+
+
+
+            var user = db.Users.FirstOrDefault(i => i.Id == userId);
+
+            var listCart = db.ShoppingCarts.Where(i => i.ApplicationUserId == userId).Include(i => i.Product).ToList();
+
+            if (!listCart.Any())
+
+                return RedirectToAction(nameof(Index));
+
+
+
+            var header = new OrderHeader
+
             {
-                OrderHeader = new Models.OrderHeader(),
-                ListCart = db.ShoppingCarts.Where(i => i.ApplicationUserId == claim.Value).Include(i => i.Product)
+
+                Name = user?.Name ?? "",
+
+                LastName = user?.LastName ?? "",
+
+                Addres = user?.Addres ?? "",
+
+                sehir = user?.City ?? "",
+
+                PostKodu = user?.PostaKodu ?? "",
+
+                PhoneNumber = user?.PhoneNumber ?? "",
+
+                Country = "Syria"
+
             };
-            foreach (var item in ShoppingCartVM.ListCart) { 
-                item.Price=item.Product.Price;
-                ShoppingCartVM.OrderHeader.orderTotal += (item.Count * item.Product.Price);
-            }
+
+
+
+            ApplyTotals(header, listCart);
+
+            ViewBag.ShippingCountries = db.ShippingZones
+                .Where(z => z.IsActive)
+                .Select(z => z.Country)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+
+            ShoppingCartVM = new ShoppingCartVM { OrderHeader = header, ListCart = listCart };
+
             return View(ShoppingCartVM);
+
         }
-    /// <summary>
-    /// دوال في اسفل مسؤولة عن عملية الدفع
-    /// </summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
+
+
 
         [HttpPost]
+
         [ValidateAntiForgeryToken]
-        
-        public IActionResult Summary(ShoppingCartVM model)
-        {
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            ShoppingCartVM.ListCart=db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value).Include(i=>i.Product);
-            ShoppingCartVM.OrderHeader.orderStatus=Diger.status_pending;
-            ShoppingCartVM.OrderHeader.ApplicationUserId = claim.Value;
-            ShoppingCartVM.OrderHeader.orderDate=DateTime.Now;
-            db.OrderHeaders.Add(ShoppingCartVM.OrderHeader);
-            db.SaveChanges();
-            foreach (var item in ShoppingCartVM.ListCart)
-            {
-                item.Price = item.Product.Price;
-               orderDetails orderDetails=new orderDetails() 
-               { 
-                   productId = item.ProductId,
-                   OrederId=ShoppingCartVM.OrderHeader.Id,
-                   Price=item.Price,
-                   count=item.Count,
-               };
-                ShoppingCartVM.OrderHeader.orderTotal += (item.Count * item.Product.Price);
-                model.OrderHeader.orderTotal += (item.Count * item.Product.Price);
-                db.orderDetailses.Add(orderDetails);
-              
 
+        public async Task<IActionResult> Summary(ShoppingCartVM model)
+
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null) return Challenge();
+
+
+
+            if (!AcceptTerms)
+
+                ModelState.AddModelError(nameof(AcceptTerms), _localizer["MustAcceptTerms"]);
+
+
+
+            RemoveCardValidation();
+
+
+
+            var listCart = db.ShoppingCarts
+
+                .Where(i => i.ApplicationUserId == userId)
+
+                .Include(i => i.Product)
+
+                .ThenInclude(p => p!.categoty)
+
+                .ToList();
+
+
+
+            if (!listCart.Any())
+
+            {
+
+                toast.AddWarningToastMessage(_localizer["ToastCartEmpty"]);
+
+                return RedirectToAction(nameof(Index));
 
             }
-            var payment=PaymentProcess(model);
-
-            db.ShoppingCarts.RemoveRange(ShoppingCartVM.ListCart);
-            db.SaveChanges();
-            toast.AddSuccessToastMessage("The order has been confirmed successfully....");
-            HttpContext.Session.SetInt32(Diger.ssShoppingCart,0);
-
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        private Payment PaymentProcess(ShoppingCartVM model)
-        {
-            Options options = new Options();
-            options.ApiKey = "sandbox-AKt0qx1u2wdXZXKrVHyqkgnNqMP011CT";
-            options.SecretKey = "sandbox-J9u0UBlT1nn1KT4btgpRqzS4ErlNXAe9";
-            options.BaseUrl = "https://sandbox-api.iyzipay.com";
-
-            CreatePaymentRequest request = new CreatePaymentRequest();
-            request.Locale = Locale.TR.ToString();
-            request.ConversationId = new Random().Next(1111,9999).ToString();
-            request.Price = model.OrderHeader.orderTotal.ToString();
-            request.PaidPrice = model.OrderHeader.orderTotal.ToString();
-            request.Currency = Currency.TRY.ToString();
-            request.Installment = 1;
-            request.BasketId = "B67832";
-            request.PaymentChannel = PaymentChannel.WEB.ToString();
-            request.PaymentGroup = PaymentGroup.PRODUCT.ToString();
-
-            //PaymentCard paymentCard = new PaymentCard();
-            //paymentCard.CardHolderName = "John Doe";
-            //paymentCard.CardNumber = "5528790000000008";
-            //paymentCard.ExpireMonth = "12";
-            //paymentCard.ExpireYear = "2030";
-            //paymentCard.Cvc = "123";
-            //paymentCard.RegisterCard = 0;
-            //request.PaymentCard = paymentCard;
 
 
 
-            PaymentCard paymentCard = new PaymentCard();
-            paymentCard.CardHolderName = model.OrderHeader.CartName;
-            paymentCard.CardNumber = model.OrderHeader.CartNumber;
-            paymentCard.ExpireMonth = model.OrderHeader.ExpirationMonth;
-            paymentCard.ExpireYear = model.OrderHeader.ExpiratioYear;
-            paymentCard.Cvc = model.OrderHeader.CVC;
-            paymentCard.RegisterCard = 0;
-            request.PaymentCard = paymentCard;
+            if (string.IsNullOrWhiteSpace(model.OrderHeader.Country))
+
+                model.OrderHeader.Country = "Syria";
 
 
-            Buyer buyer = new Buyer();
-            buyer.Id = model.OrderHeader.Id.ToString();
-            buyer.Name = model.OrderHeader.Name;
-            buyer.Surname = model.OrderHeader.LastName;
-            buyer.GsmNumber = model.OrderHeader.PhoneNumber;
-            buyer.Email = "email@email.com";
-            buyer.IdentityNumber = "74300864791";
-            buyer.LastLoginDate = "2015-10-05 12:43:35";
-            buyer.RegistrationDate = "2013-04-21 15:12:09";
-            buyer.RegistrationAddress = model.OrderHeader.Addres;
-            buyer.Ip = "85.34.78.112";
-            buyer.City = model.OrderHeader.sehir;
-            buyer.Country = "Turkey";
-            buyer.ZipCode = model.OrderHeader.PostKodu;
-            request.Buyer = buyer;
 
-            Address shippingAddress = new Address();
-            shippingAddress.ContactName = "Jane Doe";
-            shippingAddress.City = "Istanbul";
-            shippingAddress.Country = "Turkey";
-            shippingAddress.Description = "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
-            shippingAddress.ZipCode = "34742";
-            request.ShippingAddress = shippingAddress;
+            ApplyTotals(model.OrderHeader, listCart);
 
-            Address billingAddress = new Address();
-            billingAddress.ContactName = "Jane Doe";
-            billingAddress.City = "Istanbul";
-            billingAddress.Country = "Turkey";
-            billingAddress.Description = "Nidakule Göztepe, Merdivenköy Mah. Bora Sok. No:1";
-            billingAddress.ZipCode = "34742";
-            request.BillingAddress = billingAddress;
 
-            List<BasketItem> basketItems = new List<BasketItem>();
 
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            if (!ModelState.IsValid)
 
-            foreach (var item in db.ShoppingCarts.Where(i=>i.ApplicationUserId==claim.Value)
-                                                 .Include(i=>i.Product))
             {
-                basketItems.Add(new BasketItem()
+
+                model.ListCart = listCart;
+
+                ViewBag.ShippingCountries = db.ShippingZones
+                    .Where(z => z.IsActive)
+                    .Select(z => z.Country)
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToList();
+
+                return View(model);
+
+            }
+
+
+
+            var rateTry = _currency.GetRate("TRY");
+
+            model.OrderHeader.orderStatus = Diger.status_awaiting_payment;
+
+            model.OrderHeader.ApplicationUserId = userId;
+
+            model.OrderHeader.orderDate = DateTime.UtcNow;
+
+            model.OrderHeader.PaymentCurrency = _currency.CurrentCurrency;
+
+            model.OrderHeader.ExchangeRateToTry = rateTry;
+
+            model.OrderHeader.TotalPaidTry = _currency.ConvertFromUsd(model.OrderHeader.orderTotal, "TRY");
+
+            model.OrderHeader.PaymentMethod = Diger.Payment_BankTransfer;
+
+
+
+            db.OrderHeaders.Add(model.OrderHeader);
+
+            db.SaveChanges();
+
+
+
+            foreach (var item in listCart)
+
+            {
+
+                db.orderDetailses.Add(new orderDetails
+
                 {
-                    Id=item.Id.ToString(),
-                    Name=item.Product.Name,
-                    Category1=item.Product.CategoryId.ToString(),
-                    ItemType=BasketItemType.PHYSICAL.ToString(),
-                    Price=(item.Price *item.Count).ToString()
+
+                    productId = item.ProductId,
+
+                    OrederId = model.OrderHeader.Id,
+
+                    Price = item.Product.Price,
+
+                    count = item.Count,
+
                 });
+
             }
 
-            request.BasketItems = basketItems;
+            db.SaveChanges();
 
 
-           return Payment.Create(request, options);
+
+            var cartItems = db.ShoppingCarts.Where(c => c.ApplicationUserId == userId);
+
+            db.ShoppingCarts.RemoveRange(cartItems);
+
+            db.SaveChanges();
+
+
+
+            await _notifications.SendOrderPlacedAsync(model.OrderHeader);
+
+
+
+            HttpContext.Session.SetInt32(Diger.ssShoppingCart, 0);
+
+            toast.AddSuccessToastMessage(_localizer["ToastOrderPlaced"]);
+
+            return RedirectToAction(nameof(Success), new { id = model.OrderHeader.Id });
+
         }
 
-        public IActionResult SiparisTamam( )
+
+
+        [AllowAnonymous]
+
+        [HttpGet]
+
+        [HttpPost]
+
+        public async Task<IActionResult> PaymentCallback([FromForm] string? token)
+
         {
-            return View();
-        }
 
+            token ??= Request.Query["token"].FirstOrDefault();
 
+            if (string.IsNullOrEmpty(token))
 
-
-            [HttpPost]
-        [ActionName("Index")]
-        public async Task<IActionResult> IndexPOST()
-        {
-            var claimIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimIdentity.FindFirst(ClaimTypes.NameIdentifier);
-            var user=db.ApplicationUsers.FirstOrDefault(i => i.Id == claim.Value);
-            if (user==null)
             {
-                ModelState.AddModelError(string.Empty, "verification email is empty...");
+
+                toast.AddErrorToastMessage(_localizer["ToastPaymentFailed"]);
+
+                return RedirectToAction(nameof(Index), "Home");
+
             }
 
 
 
-            var userId = await userManager.GetUserIdAsync(user);
+            var order = db.OrderHeaders.FirstOrDefault(o => o.IyzipayToken == token);
+
+            if (order == null)
+
+            {
+
+                toast.AddErrorToastMessage(_localizer["ToastPaymentFailed"]);
+
+                return RedirectToAction(nameof(Index), "Home");
+
+            }
 
 
 
-            var code = await userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { area = "Identity", userId = userId, code = code},
-                protocol: Request.Scheme);
+            var result = _iyzipay.RetrievePayment(token);
 
-            await emailSender.SendEmailAsync(user.Email, "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            if (result?.Success == true)
 
-            ModelState.AddModelError(string.Empty, "send email verification code...");
+            {
 
-            return RedirectToAction("Success");
+                order.orderStatus = Diger.status_confirmed;
+
+                order.IyzipayPaymentId = result.PaymentId;
+
+                db.OrderHeaders.Update(order);
+
+
+
+                var cartItems = db.ShoppingCarts.Where(c => c.ApplicationUserId == order.ApplicationUserId);
+
+                db.ShoppingCarts.RemoveRange(cartItems);
+
+                db.SaveChanges();
+
+
+
+                await _notifications.SendOrderConfirmedAsync(order);
+
+
+
+                HttpContext.Session.SetInt32(Diger.ssShoppingCart, 0);
+
+                toast.AddSuccessToastMessage(_localizer["ToastPaymentSuccess"]);
+
+                return RedirectToAction(nameof(Success), new { id = order.Id });
+
+            }
+
+
+
+            RollbackOrder(order.Id);
+
+            toast.AddErrorToastMessage(result?.ErrorMessage ?? _localizer["ToastPaymentFailed"]);
+
+            return RedirectToAction(nameof(Summary));
+
         }
-       
 
 
+
+        [AllowAnonymous]
+
+        [HttpGet]
+
+        public async Task<IActionResult> PayPalCallback(int orderId, string token)
+
+        {
+
+            var order = db.OrderHeaders.FirstOrDefault(o => o.Id == orderId);
+
+            if (order == null || string.IsNullOrEmpty(order.PayPalOrderId))
+
+            {
+
+                toast.AddErrorToastMessage(_localizer["ToastPaymentFailed"]);
+
+                return RedirectToAction(nameof(Index), "Home");
+
+            }
+
+
+
+            var result = await _paypal.CaptureOrderAsync(token);
+
+
+
+            if (result.Success)
+
+            {
+
+                order.orderStatus = Diger.status_confirmed;
+
+                order.IyzipayPaymentId = result.CaptureId;
+
+                db.OrderHeaders.Update(order);
+
+
+
+                var cartItems = db.ShoppingCarts.Where(c => c.ApplicationUserId == order.ApplicationUserId);
+
+                db.ShoppingCarts.RemoveRange(cartItems);
+
+                db.SaveChanges();
+
+
+
+                await _notifications.SendOrderConfirmedAsync(order);
+
+
+
+                HttpContext.Session.SetInt32(Diger.ssShoppingCart, 0);
+
+                toast.AddSuccessToastMessage(_localizer["ToastPaymentSuccess"]);
+
+                return RedirectToAction(nameof(Success), new { id = order.Id });
+
+            }
+
+
+
+            RollbackOrder(order.Id);
+
+            toast.AddErrorToastMessage(result.ErrorMessage ?? _localizer["ToastPaymentFailed"]);
+
+            return RedirectToAction(nameof(Summary));
+
+        }
+
+
+
+        public IActionResult Success(int id)
+
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var order = db.OrderHeaders
+
+                .Include(o => o.ApplicationUser)
+
+                .FirstOrDefault(o => o.Id == id && (userId == null || o.ApplicationUserId == userId));
+
+
+
+            if (order == null)
+
+                return RedirectToAction("Index", "Order");
+
+
+
+            return View(order);
+
+        }
+
+
+
+        [HttpGet]
+
+        public IActionResult QuoteShipping(string country, string? city)
+
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null) return Unauthorized();
+
+
+
+            var listCart = db.ShoppingCarts
+
+                .Where(i => i.ApplicationUserId == userId)
+
+                .Include(i => i.Product)
+
+                .ToList();
+
+
+
+            if (!listCart.Any())
+
+                return Json(new { error = "empty" });
+
+
+
+            country = string.IsNullOrWhiteSpace(country) ? "Syria" : country.Trim();
+
+            city ??= "";
+
+
+
+            var subtotal = listCart.Sum(i => i.Count * i.Product.Price);
+
+            var shipping = (double)_shipping.GetShippingCostUsd(country, city, (decimal)subtotal);
+
+            var vat = subtotal * (double)_shipping.GetVatRate(country, city);
+
+            var total = subtotal + shipping + vat;
+
+
+
+            return Json(new
+
+            {
+
+                subtotalUsd = subtotal,
+
+                shippingUsd = shipping,
+
+                vatUsd = vat,
+
+                totalUsd = total,
+
+                deliveryMin = _shipping.GetDeliveryDaysMin(country, city),
+
+                deliveryMax = _shipping.GetDeliveryDaysMax(country, city),
+
+                subtotalFormatted = _currency.Format(subtotal),
+
+                shippingFormatted = shipping <= 0 ? _localizer["FreeShipping"] : _currency.Format(shipping),
+
+                vatFormatted = _currency.Format(vat),
+
+                totalFormatted = _currency.Format(total),
+
+                totalTryFormatted = _currency.FormatInCurrency(total, "TRY")
+
+            });
+
+        }
+
+
+
+        private void ApplyTotals(OrderHeader header, IEnumerable<ShoppingCart> listCart)
+
+        {
+
+            var subtotal = listCart.Sum(i => i.Count * i.Product.Price);
+
+            var shipping = (double)_shipping.GetShippingCostUsd(header.Country, header.sehir, (decimal)subtotal);
+
+            var vat = subtotal * (double)_shipping.GetVatRate(header.Country, header.sehir);
+
+
+
+            header.SubtotalUsd = subtotal;
+
+            header.ShippingUsd = shipping;
+
+            header.VatUsd = vat;
+
+            header.orderTotal = subtotal + shipping + vat;
+
+
+
+            ViewBag.DeliveryMin = _shipping.GetDeliveryDaysMin(header.Country, header.sehir);
+
+            ViewBag.DeliveryMax = _shipping.GetDeliveryDaysMax(header.Country, header.sehir);
+
+            ViewBag.ShippingUsd = shipping;
+
+            ViewBag.VatUsd = vat;
+
+            ViewBag.SubtotalUsd = subtotal;
+
+        }
+
+
+
+        private void RollbackOrder(int orderId)
+
+        {
+
+            var details = db.orderDetailses.Where(d => d.OrederId == orderId);
+
+            db.orderDetailses.RemoveRange(details);
+
+            var header = db.OrderHeaders.Find(orderId);
+
+            if (header != null)
+
+                db.OrderHeaders.Remove(header);
+
+            db.SaveChanges();
+
+        }
+
+
+
+        private void RemoveCardValidation()
+
+        {
+
+            foreach (var key in new[] { "CartName", "CartNumber", "ExpirationMonth", "ExpiratioYear", "CVC" })
+
+                ModelState.Remove($"OrderHeader.{key}");
+
+        }
 
     }
+
 }
+
+

@@ -1,150 +1,133 @@
 ﻿@model webShopping.Models.ShoppingCartVM
 @{
-    ViewData["Title"] = "Summary";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    var bankInfo = LocalizedContent.BankTransferInfo(Site.Settings, Localizer);
 }
 
+@{
+    ViewData["Title"] = Localizer["Checkout"];
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Localizer["Cart"], Url.Action("Index", "Cart")),
+        (Localizer["Checkout"], null)
+    };
+}
+
+<div class="section-title mb-4"><i class="bi bi-bag-check"></i> @Localizer["Checkout"]</div>
+
 <form method="post">
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
+    @Html.AntiForgeryToken()
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="global-card p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-truck"></i> @Localizer["ShippingInfo"]</h5>
+                <div class="row g-3">
                     <div class="col-md-6">
-
-                       
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">Name</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.Name" class="form-control" >
-                                <span asp-validation-for="OrderHeader.Name" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">LastName</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.LastName" class="form-control">
-                                <span asp-validation-for="OrderHeader.LastName" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">Addres</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.Addres" class="form-control">
-                                <span asp-validation-for="OrderHeader.Addres" class="text-danger"></span>
-                            </div>
-                        </div>
-
-
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">District</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.Semt" class="form-control">
-                                <span asp-validation-for="OrderHeader.Semt" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">city</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.sehir" class="form-control">
-                                <span asp-validation-for="OrderHeader.sehir" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">PhoneNo</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.PhoneNumber" class="form-control">
-                                <span asp-validation-for="OrderHeader.PhoneNumber" class="text-danger"></span>
-                            </div>
-                        </div>
-
-
-                        <div class="mb-3 row">
-                            <label for="inputPassword" class="col-sm-2 col-form-label">Post code</label>
-                            <div class="col-sm-9">
-                                <input type="text" asp-for="OrderHeader.PostKodu" class="form-control">
-                                <span asp-validation-for="OrderHeader.PostKodu" class="text-danger"></span>
-                            </div>
-                        </div>
-
+                        <label class="form-label">@Localizer["FirstName"]</label>
+                        <input asp-for="OrderHeader.Name" class="form-control" required />
+                        <span asp-validation-for="OrderHeader.Name" class="text-danger"></span>
                     </div>
-
-
                     <div class="col-md-6">
-                        <div class="col-md-12">
-                           
-                            <ul class="list-group mb-3">
-                                @foreach(var item in Model.ListCart)
+                        <label class="form-label">@Localizer["LastName"]</label>
+                        <input asp-for="OrderHeader.LastName" class="form-control" required />
+                        <span asp-validation-for="OrderHeader.LastName" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">@Localizer["Address"]</label>
+                        <input asp-for="OrderHeader.Addres" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["District"]</label>
+                        <input asp-for="OrderHeader.Semt" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["Country"]</label>
+                        <select asp-for="OrderHeader.Country" class="form-select" id="checkoutCountry" required>
+                            @{
+                                var countries = ViewBag.ShippingCountries as List<string>;
+                                if (countries == null || countries.Count == 0)
                                 {
-                                    <li class="list-group-item d-flex justify-content-between lh-sm">
-                                        <div>
-                                            <h6 class="my-0">@item.Product.Name</h6>
-                                            <small class="text-body-secondary"> Count  :@item.Count</small>
-                                        </div>
-                                        <span class="text-body-secondary">@((item.Count*item.Product.Price).ToString("0.00")) $</span>
-                                    </li>
+                                    countries = new List<string> { "Syria", "Turkey", "United States", "United Kingdom", "Germany" };
                                 }
-
-
-                                <li class="list-group-item d-flex justify-content-between bg-body-tertiary">
-                                    <div class="text-success">
-                                        <h6 class="my-0">Total Amount =</h6>
-                                      
-                                    </div>
-                                    <span class="text-success">@(Model.OrderHeader.orderTotal.ToString("0.00")) $</span>
-                                </li>
-                              
-                            </ul>
-
-
-
-
-                            <div class="mb-3 row">
-                                <label for="inputPassword" class="col-sm-4 col-form-label">Cart Name</label>
-                                <div class="col-sm-8">
-                                    <input type="text" asp-for="OrderHeader.CartName" class="form-control">
-                                    <span asp-validation-for="OrderHeader.CartName" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="mb-3 row">
-                                <label for="inputPassword" class="col-sm-4 col-form-label">Cart Number</label>
-                                <div class="col-sm-8">
-                                    <input type="text" asp-for="OrderHeader.CartNumber" class="form-control">
-                                    <span asp-validation-for="OrderHeader.CartNumber" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="mb-3 row">
-                          
-                                <div class="col-sm-4">
-                                    <input type="text" asp-for="OrderHeader.ExpirationMonth" class="form-control" placeholder="Month">
-                                    <span asp-validation-for="OrderHeader.ExpirationMonth" class="text-danger"></span>
-                                </div>
-                                <div class="col-sm-4">
-                                    <input type="text" asp-for="OrderHeader.ExpiratioYear" class="form-control" placeholder="Year">
-                                    <span asp-validation-for="OrderHeader.ExpiratioYear" class="text-danger"></span>
-                                </div>
-                                <div class="col-sm-4">
-                                    <input type="text" asp-for="OrderHeader.CVC" class="form-control" placeholder="CVC">
-                                    <span asp-validation-for="OrderHeader.CVC" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                        </div>
+                                foreach (var c in countries)
+                                {
+                                    <option value="@c">@c</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["City"]</label>
+                        <input asp-for="OrderHeader.sehir" class="form-control" id="checkoutCity" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["Phone"]</label>
+                        <input asp-for="OrderHeader.PhoneNumber" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">@Localizer["PostCode"]</label>
+                        <input asp-for="OrderHeader.PostKodu" class="form-control" />
                     </div>
                 </div>
             </div>
 
-            <div class="card-footer">
-                <div class="row">
-                    <div class="col-md-6">
-                        <a asp-action="Index" asp-controller="Home" class="btn btn-primary form-control"><i class="bi bi-house-door"></i> Home</a>
-                    </div>
-                    <div class="col-md-6">
+            <div class="mt-3">
+                @await Html.PartialAsync("_BankTransferInfo", bankInfo)
+            </div>
+        </div>
 
-                        <button type="submit" class="btn btn-success form-control">Complete Order</button>
+        <div class="col-lg-5">
+            <div class="global-card sticky-top" style="top:1rem">
+                <div class="card-header bg-white fw-bold border-0 pt-3 px-3">@Localizer["OrderSummary"]</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.ListCart)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>@LocalizedContent.ProductName(item.Product, Localizer) <small class="text-muted">x@(item.Count)</small></span>
+                            <strong>@Currency.Format(item.Count * item.Product.Price)</strong>
+                        </li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@Localizer["Subtotal"]</span>
+                        <span id="quoteSubtotal">@Currency.Format(ViewBag.SubtotalUsd ?? Model.OrderHeader.SubtotalUsd)</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@Localizer["Shipping"]</span>
+                        @{
+                            var shipCost = ViewBag.ShippingUsd ?? Model.OrderHeader.ShippingUsd;
+                        }
+                        <span id="quoteShipping">@(shipCost <= 0 ? Localizer["FreeShipping"] : Currency.Format(shipCost))</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@Localizer["Vat"]</span>
+                        <span id="quoteVat">@Currency.Format(ViewBag.VatUsd ?? Model.OrderHeader.VatUsd)</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-light fw-bold fs-5">
+                        <span>@Localizer["Total"] (@Currency.CurrentCurrency)</span>
+                        <span class="text-danger" id="quoteTotal">@Currency.Format(Model.OrderHeader.orderTotal)</span>
+                    </li>
+                </ul>
+                <div class="p-3 border-top">
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-truck"></i> @Localizer["DeliveryEstimate"]:
+                        <span id="quoteDelivery">@ViewBag.DeliveryMin–@ViewBag.DeliveryMax</span> @Localizer["BusinessDays"]
+                    </small>
+                    <small class="text-muted d-block mb-3">
+                        <i class="bi bi-bank"></i> @Localizer["PayViaBankTransfer"]
+                    </small>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="AcceptTerms" id="acceptTerms" value="true" required />
+                        <label class="form-check-label small" for="acceptTerms">
+                            @Localizer["AcceptTerms"]
+                            <a asp-controller="Home" asp-action="Terms" target="_blank">@Localizer["TermsOfUse"]</a>
+                            &amp;
+                            <a asp-controller="Home" asp-action="Refund" target="_blank">@Localizer["RefundPolicy"]</a>
+                        </label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-accent btn-lg">
+                            <i class="bi bi-bag-check"></i> @Localizer["PlaceOrder"]
+                        </button>
+                        <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cart"]</a>
                     </div>
                 </div>
             </div>
@@ -153,8 +136,39 @@
 </form>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        (function () {
+            const countryEl = document.getElementById('checkoutCountry');
+            const cityEl = document.getElementById('checkoutCity');
+            if (!countryEl || !cityEl) return;
 
+            let timer = null;
+            const quoteUrl = '@Url.Action("QuoteShipping", "Cart")';
+
+            function refreshQuote() {
+                const country = countryEl.value;
+                const city = cityEl.value;
+                fetch(`${quoteUrl}?country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (!data || data.error) return;
+                        document.getElementById('quoteSubtotal').textContent = data.subtotalFormatted;
+                        document.getElementById('quoteShipping').textContent = data.shippingFormatted;
+                        document.getElementById('quoteVat').textContent = data.vatFormatted;
+                        document.getElementById('quoteTotal').textContent = data.totalFormatted;
+                        document.getElementById('quoteDelivery').textContent = `${data.deliveryMin}–${data.deliveryMax}`;
+                    })
+                    .catch(() => { });
+            }
+
+            function scheduleRefresh() {
+                clearTimeout(timer);
+                timer = setTimeout(refreshQuote, 350);
+            }
+
+            countryEl.addEventListener('change', refreshQuote);
+            cityEl.addEventListener('input', scheduleRefresh);
+        })();
+    </script>
+}

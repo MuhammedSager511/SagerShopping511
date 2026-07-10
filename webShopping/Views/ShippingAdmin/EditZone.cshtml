@@ -1,0 +1,53 @@
+@model webShopping.Models.ShippingZone
+@{
+    ViewData["Title"] = Localizer["EditShippingZone"];
+}
+
+<div class="section-title mb-4"><i class="bi bi-pencil"></i> @Localizer["EditShippingZone"]</div>
+
+<div class="global-card p-4" style="max-width:600px">
+    <form asp-action="EditZone" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label class="form-label">@Localizer["Country"]</label>
+            <input asp-for="Country" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">@Localizer["CityOptional"]</label>
+            <input asp-for="City" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">@Localizer["CostUsd"]</label>
+            <input asp-for="ShippingCostUsd" class="form-control" type="number" step="0.01" min="0" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">@Localizer["DefaultVatRate"]</label>
+            <input asp-for="VatRate" class="form-control" type="number" step="0.01" min="0" max="1" />
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label">@Localizer["DeliveryMinDays"]</label>
+                <input asp-for="DeliveryMinDays" class="form-control" type="number" min="1" />
+            </div>
+            <div class="col-6">
+                <label class="form-label">@Localizer["DeliveryMaxDays"]</label>
+                <input asp-for="DeliveryMaxDays" class="form-control" type="number" min="1" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">@Localizer["SortOrder"]</label>
+            <input asp-for="SortOrder" class="form-control" type="number" />
+        </div>
+        <div class="form-check mb-2">
+            <input asp-for="IsFreeShipping" class="form-check-input" />
+            <label class="form-check-label">@Localizer["FreeShipping"]</label>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">@Localizer["Active"]</label>
+        </div>
+        <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+    </form>
+</div>

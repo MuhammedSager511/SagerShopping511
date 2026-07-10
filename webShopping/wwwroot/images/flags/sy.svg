@@ -1,0 +1,14 @@
+<svg class="flag-svg" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision"
+     text-rendering="geometricPrecision" image-rendering="optimizeQuality"
+     fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 513 357.071">
+  <path fill-rule="nonzero"
+        d="M28.477.32h456.044c15.488 0 28.159 12.672 28.159 28.16v300.111c0 15.488-12.671 28.16-28.159 28.16H28.477c-15.486 0-28.157-12.672-28.157-28.16V28.48C.32 12.992 12.991.32 28.477.32z"/>
+  <path fill="#fff" fill-rule="nonzero"
+        d="M512.68 234.625H.32V28.48C.32 12.992 12.991.32 28.477.32h456.044c15.488 0 28.159 12.672 28.159 28.16v206.145z"/>
+  <path fill="#007A3D" fill-rule="nonzero"
+        d="M512.68 119.129H.32V28.48C.32 12.992 12.991.32 28.477.32h456.044c15.488 0 28.159 12.672 28.159 28.16v90.649z"/>
+  <path fill="#CE1126" fill-rule="nonzero"
+        d="M228.751 217.327l27.746-85.393 27.746 85.393-72.641-52.776h89.788l-72.639 52.776zm-128.085 0l27.746-85.393 27.746 85.393-72.641-52.776h89.788l-72.639 52.776zm256.178 0l27.746-85.393 27.746 85.393-72.641-52.776h89.788l-72.639 52.776z"/>
+  <rect fill="none" stroke="#CCC" stroke-width=".64" stroke-miterlimit="22.926"
+        x=".32" y=".319" width="512.359" height="356.43" rx="27.231" ry="28.159"/>
+</svg>

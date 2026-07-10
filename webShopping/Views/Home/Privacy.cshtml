@@ -1,6 +1,14 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@inject ISiteContentService Site
+@{
+    var s = Site.Settings;
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Site.T(s.PrivacyTitleEn, s.PrivacyTitleAr), null)
+    };
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="global-card p-4 p-lg-5">
+    <h1 class="section-title mb-4">@Site.T(s.PrivacyTitleEn, s.PrivacyTitleAr)</h1>
+    <div class="legal-body">@Html.Raw(Site.T(s.PrivacyBodyEn, s.PrivacyBodyAr).Replace("\n", "<br/>"))</div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary mt-4">@Localizer["BackHome"]</a>
+</div>

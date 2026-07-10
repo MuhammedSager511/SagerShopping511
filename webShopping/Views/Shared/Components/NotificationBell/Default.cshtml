@@ -1,0 +1,50 @@
+@model (int Unread, System.Collections.Generic.List<webShopping.Models.AppNotification> Recent)
+@{
+    var isAr = Localizer.IsArabic;
+    string Title(webShopping.Models.AppNotification n) => isAr ? n.TitleAr : n.TitleEn;
+    string Message(webShopping.Models.AppNotification n) => isAr ? n.MessageAr : n.MessageEn;
+}
+
+<li class="nav-item dropdown notification-bell me-2">
+    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+       title="@Localizer["Notifications"]">
+        <i class="bi bi-bell fs-5"></i>
+        @if (Model.Unread > 0)
+        {
+            <span class="notif-badge">@(Model.Unread > 99 ? "99+" : Model.Unread.ToString())</span>
+        }
+    </a>
+    <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow">
+        <div class="notification-dropdown-header d-flex justify-content-between align-items-center">
+            <strong>@Localizer["Notifications"]</strong>
+            @if (Model.Unread > 0)
+            {
+                <form asp-controller="Notifications" asp-action="MarkAllRead" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">
+                        @Localizer["MarkAllRead"]
+                    </button>
+                </form>
+            }
+        </div>
+        @if (!Model.Recent.Any())
+        {
+            <div class="notification-empty text-muted">@Localizer["NotificationsEmpty"]</div>
+        }
+        else
+        {
+            @foreach (var n in Model.Recent)
+            {
+                <a class="notification-item @(n.IsRead ? "" : "unread")"
+                   asp-controller="Notifications" asp-action="Open" asp-route-id="@n.Id">
+                    <div class="notification-item-title">@Title(n)</div>
+                    <div class="notification-item-msg">@Message(n)</div>
+                    <small class="text-muted">@n.CreatedAt.ToLocalTime().ToString("g")</small>
+                </a>
+            }
+        }
+        <div class="notification-dropdown-footer">
+            <a asp-controller="Notifications" asp-action="Index">@Localizer["ViewAllNotifications"]</a>
+        </div>
+    </div>
+</li>

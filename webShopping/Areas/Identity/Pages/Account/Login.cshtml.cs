@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -16,23 +16,27 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using webShopping.Data;
 using webShopping.Models;
+using webShopping.Services;
 
 namespace webShopping.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly ApplicationDbContext db;
+        private readonly IAppLocalizer _localizer;
 
 
-        public LoginModel(SignInManager<IdentityUser> signInManager,
+        public LoginModel(SignInManager<ApplicationUser> signInManager,
                             ILogger<LoginModel> logger, 
-                            ApplicationDbContext context)
+                            ApplicationDbContext context,
+                            IAppLocalizer localizer)
         {
             _signInManager = signInManager;
             _logger = logger;
             db= context;
+            _localizer = localizer;
         }
 
         /// <summary>
@@ -121,9 +125,12 @@ namespace webShopping.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    var user=db.ApplicationUsers.FirstOrDefault(x => x.Email == Input.Email);
-                    int count=db.ShoppingCarts.Where(i=>i.ApplicationUserId == user.Id).Count();
-                HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
+                    var user = db.Users.FirstOrDefault(x => x.Email == Input.Email);
+                    if (user != null)
+                    {
+                        int count = db.ShoppingCarts.Count(i => i.ApplicationUserId == user.Id);
+                        HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
+                    }
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
@@ -138,7 +145,7 @@ namespace webShopping.Areas.Identity.Pages.Account
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, _localizer["InvalidLogin"]);
                     return Page();
                 }
             }

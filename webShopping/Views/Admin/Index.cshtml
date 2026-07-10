@@ -1,0 +1,109 @@
+@{
+    ViewData["Title"] = Localizer["Dashboard"];
+}
+
+<div class="section-title mb-4">
+    <i class="bi bi-speedometer2"></i> @Localizer["Dashboard"]
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;border-left:4px solid #e94560!important">
+            <div class="card-body">
+                <div class="text-muted small">@Localizer["Products"]</div>
+                <div class="fs-2 fw-bold">@ViewBag.TotalProducts</div>
+                <a asp-controller="Products" asp-action="Index" class="small">@Localizer["Manage"] &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;border-left:4px solid #40916c!important">
+            <div class="card-body">
+                <div class="text-muted small">@Localizer["Categories"]</div>
+                <div class="fs-2 fw-bold">@ViewBag.TotalCategories</div>
+                <a asp-controller="Categoties" asp-action="Index" class="small">@Localizer["Manage"] &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;border-left:4px solid #1a1a2e!important">
+            <div class="card-body">
+                <div class="text-muted small">@Localizer["Users"]</div>
+                <div class="fs-2 fw-bold">@ViewBag.TotalUsers</div>
+                <a asp-controller="User" asp-action="Index" class="small">@Localizer["Manage"] &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;border-left:4px solid #f5a623!important">
+            <div class="card-body">
+                <div class="text-muted small">@Localizer["Orders"]</div>
+                <div class="fs-2 fw-bold">@ViewBag.TotalOrders</div>
+                <a asp-controller="Order" asp-action="Index" class="small">@Localizer["Manage"] &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm" style="border-radius:12px">
+            <div class="card-header bg-white fw-bold">@Localizer["OrderStatus"]</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-warning text-dark">@Localizer["Pending"]</span>
+                    <strong>@ViewBag.PendingOrders</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-success">@Localizer["Confirmed"]</span>
+                    <strong>@ViewBag.ConfirmedOrders</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-info text-dark">@Localizer["Shipped"]</span>
+                    <strong>@ViewBag.CargoOrders</strong>
+                </div>
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <span>@Localizer["Revenue"]</span>
+                    <strong class="text-danger">@Currency.Format((double)ViewBag.Revenue)</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm" style="border-radius:12px">
+            <div class="card-header bg-white fw-bold">@Localizer["RecentOrders"]</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>#</th><th>@Localizer["Users"]</th><th>@Localizer["Orders"]</th><th>Total</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var o in (IEnumerable<webShopping.Models.OrderHeader>)ViewBag.RecentOrders)
+                        {
+                            <tr>
+                                <td>@o.Id</td>
+                                <td>@(o.ApplicationUser?.Email ?? o.Name)</td>
+                                <td><span class="badge bg-secondary">@o.orderStatus</span></td>
+                                <td>@Currency.Format(o.orderTotal)</td>
+                                <td><a asp-controller="Order" asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-primary">@Localizer["Details"]</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:12px">
+    <div class="card-header bg-white fw-bold"><i class="bi bi-exclamation-triangle text-warning"></i> @Localizer["OutOfStock"] (@ViewBag.LowStock)</div>
+    <div class="card-body">
+        @if ((int)ViewBag.LowStock > 0)
+        {
+            <a asp-controller="Products" asp-action="Index" class="btn btn-warning btn-sm">@Localizer["Manage"] @Localizer["Products"]</a>
+        }
+        else
+        {
+            <span class="text-success"><i class="bi bi-check-circle"></i> @Localizer["InStock"]</span>
+        }
+    </div>
+</div>

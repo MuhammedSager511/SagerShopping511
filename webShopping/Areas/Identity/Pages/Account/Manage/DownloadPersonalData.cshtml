@@ -1,12 +1,12 @@
 ﻿@page
 @model DownloadPersonalDataModel
 @{
-    ViewData["Title"] = "Download Your Data";
+    ViewData["Title"] = Localizer["DownloadData"];
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
-<h3>@ViewData["Title"]</h3>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<h4 class="fw-bold mb-3">@Localizer["DownloadData"]</h4>
+<p class="text-muted">@Localizer["PersonalDataDesc"]</p>
+<form asp-page="DownloadPersonalData" method="post">
+    <button class="btn btn-accent" type="submit"><i class="bi bi-download"></i> @Localizer["DownloadData"]</button>
+</form>

@@ -1,141 +1,176 @@
-﻿@model webShopping.Models.OrderDetailsVM
-
+@model webShopping.Models.OrderDetailsVM
 @{
-    ViewData["Title"] = "Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Localizer["Details"];
+    ViewBag.Breadcrumbs = new (string, string?)[] {
+        (Localizer["Home"], Url.Action("Index", "Home")),
+        (Localizer["Orders"], Url.Action("Index", "Order")),
+        ($"{Localizer["OrderNumber"]}{Model.OrderHeader.Id}", null)
+    };
 }
 
+<div class="section-title mb-4"><i class="bi bi-receipt"></i> @Localizer["OrderNumber"]@Model.OrderHeader.Id</div>
+
 <form method="post">
-    <input hidden asp-for="OrderHeader.Id" />
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="OrderHeader.Id" />
 
-    <div class="container">
-        <div class="row">
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm" style="border-radius:12px">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-truck"></i> @Localizer["ShippingInfo"]
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 text-muted">@Localizer["FirstName"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.Name</dd>
 
-            <div class="col-md-6">
+                        <dt class="col-sm-4 text-muted">@Localizer["LastName"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.LastName</dd>
 
-                <div>
+                        <dt class="col-sm-4 text-muted">@Localizer["Phone"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.PhoneNumber</dd>
 
-                    <dl class="row">
+                        <dt class="col-sm-4 text-muted">@Localizer["Address"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.Addres</dd>
 
+                        <dt class="col-sm-4 text-muted">@Localizer["District"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.Semt</dd>
 
-                        <dt class="col-sm-4">
-                            Name :
-                        </dt>
+                        <dt class="col-sm-4 text-muted">@Localizer["City"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.sehir</dd>
+
+                        <dt class="col-sm-4 text-muted">@Localizer["PostCode"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.PostKodu</dd>
+
+                        <dt class="col-sm-4 text-muted">@Localizer["OrderDate"]</dt>
+                        <dd class="col-sm-8">@Model.OrderHeader.orderDate.ToShortDateString()</dd>
+
+                        <dt class="col-sm-4 text-muted">@Localizer["Status"]</dt>
                         <dd class="col-sm-8">
-                            @Model.OrderHeader.Name
+                            <span class="badge @OrderStatusHelper.BadgeClass(Model.OrderHeader.orderStatus)">
+                                @OrderStatusHelper.Label(Localizer, Model.OrderHeader.orderStatus)
+                            </span>
                         </dd>
 
-                        <dt class="col-sm-4">
-                            LastName :
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.OrderHeader.LastName
-                        </dd>
+                        @if (!string.IsNullOrEmpty(Model.OrderHeader.TrackingNumber))
+                        {
+                            <dt class="col-sm-4 text-muted">@Localizer["TrackingNumber"]</dt>
+                            <dd class="col-sm-8"><code>@Model.OrderHeader.TrackingNumber</code></dd>
+                        }
 
-                        <dt class="col-sm-4">
-                            PhoneNumber :
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.OrderHeader.PhoneNumber
-                        </dd>
+                        @if (!string.IsNullOrEmpty(Model.OrderHeader.PaymentReference))
+                        {
+                            <dt class="col-sm-4 text-muted">@Localizer["PaymentReference"]</dt>
+                            <dd class="col-sm-8"><code>@Model.OrderHeader.PaymentReference</code></dd>
+                            @if (!string.IsNullOrEmpty(Model.OrderHeader.PaymentBankName))
+                            {
+                                <dt class="col-sm-4 text-muted">@Localizer["PaymentBankName"]</dt>
+                                <dd class="col-sm-8">@Model.OrderHeader.PaymentBankName</dd>
+                            }
+                            @if (Model.OrderHeader.PaymentSubmittedAt.HasValue)
+                            {
+                                <dt class="col-sm-4 text-muted">@Localizer["PaymentSubmittedAt"]</dt>
+                                <dd class="col-sm-8">@Model.OrderHeader.PaymentSubmittedAt.Value.ToLocalTime().ToString("g")</dd>
+                            }
+                        }
 
-                        <dt class="col-sm-4">
-                            Addres :
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.OrderHeader.Addres
-                        </dd>
-
-                        <dt class="col-sm-4">
-                            District :
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.OrderHeader.Semt
-                        </dd>
-
-
-                        <dt class="col-sm-4">
-                            City :
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.OrderHeader.sehir
-                        </dd>
-
-                        <dt class="col-sm-4">
-                            PostCodu :
-                            </>
-                        <dd class="col-sm-8">
-                                @Model.OrderHeader.PostKodu
-                        </dd>
-
-                        <dt class="col-sm-4">
-                            Order Date :
-                        </dt>
-                        <dd class="col-sm-8">
-                                @Model.OrderHeader.orderDate.ToShortDateString()
-                        </dd>
+                        @if (Model.OrderHeader.TotalPaidTry > 0)
+                        {
+                            <dt class="col-sm-4 text-muted">@Localizer["PaymentInfo"]</dt>
+                            <dd class="col-sm-8">
+                                @Model.OrderHeader.PaymentCurrency · TRY @Model.OrderHeader.TotalPaidTry.ToString("N2")
+                                <small class="text-muted d-block">@Localizer["ExchangeRate"]: @Model.OrderHeader.ExchangeRateToTry.ToString("N4")</small>
+                            </dd>
+                        }
                     </dl>
-
-
-
                 </div>
             </div>
+        </div>
 
-
-            <div class="col-md-6">
-                <div class="col-md-12">
-
-                    <ul class="list-group mb-3">
-                        @foreach (var item in Model.orderDetails)
-                        {
-                            <li class="list-group-item d-flex justify-content-between lh-sm">
-                                <div>
-                                    <h6 class="my-0">@item.product.Name</h6>
-                                    <small class="text-body-secondary"> Count  :@item.count</small>
-                                </div>
-                                <span class="text-body-secondary">@((item.count * item.product.Price).ToString("0.00")) $</span>
-                            </li>
-                        }
-
-
-                        <li class="list-group-item d-flex justify-content-between bg-body-tertiary">
-                            <div class="text-success">
-                                <h6 class="my-0">Total Amount =</h6>
-
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm" style="border-radius:12px">
+                <div class="card-header bg-white fw-bold">
+                    <i class="bi bi-bag-check"></i> @Localizer["OrderSummary"]
+                </div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.orderDetails)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">@item.product.Name</div>
+                                <small class="text-muted">@Localizer["Quantity"]: @item.count</small>
                             </div>
-                            <span class="text-success">@(Model.OrderHeader.orderTotal.ToString("0.00")) $</span>
+                            <strong class="text-danger">@Currency.Format(item.Price * item.count)</strong>
                         </li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <span class="fw-bold fs-5">@Localizer["Total"]</span>
+                        <span class="fw-bold fs-5 text-danger">@Currency.Format(Model.OrderHeader.orderTotal)</span>
+                    </li>
+                </ul>
 
-                    </ul>
-
-
+                <div class="card-body d-grid gap-2">
                     @if (User.IsInRole(Diger.Role_Admin))
                     {
-
-                        <br />
                         @if (Model.OrderHeader.orderStatus == Diger.status_confirmed)
                         {
-                            <input type="submit" value="Ship it"
-                                   class=" btn btn-primary form-control"
-                                   formaction="/Order/ShipIt"
-                                   formmethod="post" />
+                            <div class="mb-2">
+                                <label class="form-label">@Localizer["TrackingNumber"]</label>
+                                <input asp-for="OrderHeader.TrackingNumber" class="form-control" placeholder="TRK-..." />
+                            </div>
+                            <button type="submit" class="btn btn-accent btn-lg"
+                                    formaction="/Order/ShipIt" formmethod="post">
+                                <i class="bi bi-truck"></i> @Localizer["Ship"]
+                            </button>
                         }
-                        @if (Model.OrderHeader.orderStatus == Diger.status_pending)
+                        @if (Model.OrderHeader.orderStatus == Diger.status_payment_review ||
+                             Model.OrderHeader.orderStatus == Diger.status_pending)
                         {
-                            <input type="submit" value="Approve"
-                                   class=" btn btn-primary form-control"
-                                   formaction="/Order/Approved"
-                                   formmethod="post" />
+                            <div class="alert alert-info small mb-2">
+                                <i class="bi bi-bank"></i> @Localizer["AdminVerifyPaymentHint"]
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg"
+                                    formaction="/Order/Approved" formmethod="post">
+                                <i class="bi bi-patch-check"></i> @Localizer["VerifyPayment"]
+                            </button>
+                        }
+                        @if (Model.OrderHeader.orderStatus == Diger.status_awaiting_payment)
+                        {
+                            <div class="alert alert-warning small mb-0">
+                                <i class="bi bi-hourglass-split"></i> @Localizer["AwaitingCustomerPayment"]
+                            </div>
                         }
                     }
                     else
                     {
-                        <label class=" btn btn-warning form-control">You will be answered as soon as possible...!!!</label>
+                        @if (Model.OrderHeader.orderStatus == Diger.status_awaiting_payment)
+                        {
+                            @await Html.PartialAsync("_PaymentConfirmationForm", Model.OrderHeader)
+                        }
+                        else if (Model.OrderHeader.orderStatus == Diger.status_payment_review)
+                        {
+                            <div class="alert alert-info mb-0 text-center">
+                                <i class="bi bi-search"></i> @Localizer["PaymentUnderReviewMessage"]
+                            </div>
+                        }
+                        else if (Model.OrderHeader.orderStatus == Diger.status_confirmed)
+                        {
+                            <div class="alert alert-success mb-0 text-center">
+                                <i class="bi bi-check-circle"></i> @Localizer["OrderConfirmedMessage"]
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info mb-0 text-center">
+                                <i class="bi bi-hourglass-split"></i> @Localizer["OrderPendingMessage"]
+                            </div>
+                        }
                     }
-
-
+                    <a asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> @Localizer["AllOrders"]
+                    </a>
                 </div>
-
             </div>
         </div>
     </div>

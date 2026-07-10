@@ -1,10 +1,16 @@
 ﻿@page
 @model LockoutModel
 @{
-    ViewData["Title"] = "Locked out";
+    ViewData["Title"] = Localizer["LockoutTitle"];
 }
 
-<header>
-    <h1 class="text-danger">@ViewData["Title"]</h1>
-    <p class="text-danger">This account has been locked out, please try again later.</p>
-</header>
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="auth-card global-card p-4 text-center">
+            <i class="bi bi-lock-fill text-danger fs-1 mb-3"></i>
+            <h2 class="text-danger fw-bold">@Localizer["LockoutTitle"]</h2>
+            <p class="text-muted">@Localizer["LockoutMessage"]</p>
+            <a asp-page="./Login" class="btn btn-outline-secondary mt-2">@Localizer["BackToLogin"]</a>
+        </div>
+    </div>
+</div>

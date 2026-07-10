@@ -1,0 +1,81 @@
+@model ApplicationUser
+@{
+    ViewData["Title"] = Localizer["MyAccount"];
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm text-center p-4" style="border-radius:12px">
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                 style="width:80px;height:80px;font-size:2rem;font-weight:700">
+                @(Model.Name?.FirstOrDefault().ToString().ToUpper() ?? "U")
+            </div>
+            <h5 class="fw-bold mb-1">@Model.Name @Model.LastName</h5>
+            <p class="text-muted small mb-3">@Model.Email</p>
+            <div class="d-flex justify-content-center gap-3 mb-3">
+                <div class="text-center">
+                    <div class="fs-4 fw-bold text-danger">@ViewBag.OrderCount</div>
+                    <small class="text-muted">@Localizer["Orders"]</small>
+                </div>
+                <div class="text-center">
+                    <div class="fs-4 fw-bold text-primary">@ViewBag.CartCount</div>
+                    <small class="text-muted">@Localizer["Cart"]</small>
+                </div>
+            </div>
+            <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword" class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-key"></i> @Localizer["ChangePassword"]
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm" style="border-radius:12px">
+            <div class="card-header bg-white fw-bold">
+                <i class="bi bi-person-gear"></i> @Localizer["EditProfile"]
+            </div>
+            <div class="card-body">
+                <form asp-action="Index" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">@Localizer["FirstName"]</label>
+                            <input asp-for="Name" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Localizer["LastName"]</label>
+                            <input asp-for="LastName" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Localizer["Email"]</label>
+                            <input asp-for="Email" class="form-control" readonly disabled />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@Localizer["Phone"]</label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">@Localizer["Address"]</label>
+                            <input asp-for="Addres" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Localizer["City"]</label>
+                            <input asp-for="City" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Localizer["Country"]</label>
+                            <input asp-for="Country" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@Localizer["PostCode"]</label>
+                            <input asp-for="PostaKodu" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-accent"><i class="bi bi-check-lg"></i> @Localizer["Save"]</button>
+                        <a asp-controller="Order" asp-action="Index" class="btn btn-outline-primary">@Localizer["ViewOrders"]</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
