@@ -1,4 +1,4 @@
-﻿namespace webShopping.Models
+namespace webShopping.Models
 {
     public class ShoppingCartVM
     {

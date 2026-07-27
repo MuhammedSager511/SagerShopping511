@@ -69,25 +69,32 @@ namespace webShopping.Services
             await _sms.SendAsync(order.PhoneNumber, smsText);
 
             var orderReplacements = OrderReplacements(order);
-            if (!string.IsNullOrEmpty(order.ApplicationUserId))
+            try
             {
-                await _inApp.NotifyUserAsync(
-                    order.ApplicationUserId,
-                    "NotifOrderPlacedTitle",
-                    "NotifOrderPlacedMessage",
+                if (!string.IsNullOrEmpty(order.ApplicationUserId))
+                {
+                    await _inApp.NotifyUserAsync(
+                        order.ApplicationUserId,
+                        "NotifOrderPlacedTitle",
+                        "NotifOrderPlacedMessage",
+                        orderReplacements,
+                        $"/Order/Details/{order.Id}",
+                        "order",
+                        order.Id);
+                }
+
+                await _inApp.NotifyAdminsAsync(
+                    "NotifAdminNewOrderTitle",
+                    "NotifAdminNewOrderMessage",
                     orderReplacements,
                     $"/Order/Details/{order.Id}",
                     "order",
                     order.Id);
             }
-
-            await _inApp.NotifyAdminsAsync(
-                "NotifAdminNewOrderTitle",
-                "NotifAdminNewOrderMessage",
-                orderReplacements,
-                $"/Order/Details/{order.Id}",
-                "order",
-                order.Id);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create in-app notifications for order #{Id}", order.Id);
+            }
         }
 
         public async Task SendOrderConfirmedAsync(OrderHeader order)
@@ -118,14 +125,21 @@ namespace webShopping.Services
 
             if (!string.IsNullOrEmpty(order.ApplicationUserId))
             {
-                await _inApp.NotifyUserAsync(
-                    order.ApplicationUserId,
-                    "NotifOrderConfirmedTitle",
-                    "NotifOrderConfirmedMessage",
-                    OrderReplacements(order),
-                    $"/Order/Details/{order.Id}",
-                    "order",
-                    order.Id);
+                try
+                {
+                    await _inApp.NotifyUserAsync(
+                        order.ApplicationUserId,
+                        "NotifOrderConfirmedTitle",
+                        "NotifOrderConfirmedMessage",
+                        OrderReplacements(order),
+                        $"/Order/Details/{order.Id}",
+                        "order",
+                        order.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create confirmation notification for order #{Id}", order.Id);
+                }
             }
         }
 
@@ -157,16 +171,23 @@ namespace webShopping.Services
 
             if (!string.IsNullOrEmpty(order.ApplicationUserId))
             {
-                var replacements = OrderReplacements(order);
-                replacements["Tracking"] = order.TrackingNumber ?? "—";
-                await _inApp.NotifyUserAsync(
-                    order.ApplicationUserId,
-                    "NotifOrderShippedTitle",
-                    "NotifOrderShippedMessage",
-                    replacements,
-                    $"/Order/Details/{order.Id}",
-                    "order",
-                    order.Id);
+                try
+                {
+                    var replacements = OrderReplacements(order);
+                    replacements["Tracking"] = order.TrackingNumber ?? "—";
+                    await _inApp.NotifyUserAsync(
+                        order.ApplicationUserId,
+                        "NotifOrderShippedTitle",
+                        "NotifOrderShippedMessage",
+                        replacements,
+                        $"/Order/Details/{order.Id}",
+                        "order",
+                        order.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create shipped notification for order #{Id}", order.Id);
+                }
             }
         }
 
@@ -177,13 +198,20 @@ namespace webShopping.Services
                 ? "—"
                 : order.PaymentReference;
 
-            await _inApp.NotifyAdminsAsync(
-                "NotifAdminPaymentSubmittedTitle",
-                "NotifAdminPaymentSubmittedMessage",
-                replacements,
-                $"/Order/Details/{order.Id}",
-                "payment",
-                order.Id);
+            try
+            {
+                await _inApp.NotifyAdminsAsync(
+                    "NotifAdminPaymentSubmittedTitle",
+                    "NotifAdminPaymentSubmittedMessage",
+                    replacements,
+                    $"/Order/Details/{order.Id}",
+                    "payment",
+                    order.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create payment-submitted notification for order #{Id}", order.Id);
+            }
         }
 
         private static Dictionary<string, string> OrderReplacements(OrderHeader order) =>

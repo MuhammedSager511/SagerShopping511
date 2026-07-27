@@ -15,7 +15,7 @@ namespace webShopping.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
-            if (!User.Identity?.IsAuthenticated == true)
+            if (User.Identity?.IsAuthenticated != true)
                 return Content("");
 
             var userId = UserClaimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);

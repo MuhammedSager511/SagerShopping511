@@ -120,11 +120,35 @@ namespace webShopping
 
             if (app.Environment.IsDevelopment())
             {
+                app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler(errorApp =>
+                {
+                    errorApp.Run(async context =>
+                    {
+                        var ex = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+                        if (ex != null)
+                        {
+                            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
+                                .CreateLogger("UnhandledException");
+                            logger.LogError(ex, "Unhandled exception at {Path}", context.Request.Path);
+
+                            try
+                            {
+                                var logDir = Path.Combine(app.Environment.ContentRootPath, "logs");
+                                Directory.CreateDirectory(logDir);
+                                var line = $"{DateTime.UtcNow:u} | {context.Request.Path}{context.Request.QueryString} | {ex.GetType().Name}: {ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}---{Environment.NewLine}";
+                                await File.AppendAllTextAsync(Path.Combine(logDir, "errors.log"), line);
+                            }
+                            catch { /* ignore logging failures */ }
+                        }
+
+                        context.Response.Redirect("/Home/Error");
+                    });
+                });
                 app.UseHsts();
             }
 

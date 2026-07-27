@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -289,7 +289,7 @@ namespace webShopping.Controllers
 
 
 
-            if (!AcceptTerms)
+            if (!model.AcceptTerms && !AcceptTerms)
 
                 ModelState.AddModelError(nameof(AcceptTerms), _localizer["MustAcceptTerms"]);
 

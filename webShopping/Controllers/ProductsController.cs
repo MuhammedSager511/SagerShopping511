@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -164,6 +164,10 @@ namespace webShopping.Controllers
 
                     await SaveProductImagesAsync(fileDetails, galleryFiles);
 
+                    fileDetails.NameAr ??= "";
+                    fileDetails.Description ??= "";
+                    fileDetails.DescriptionAr ??= "";
+
                     _context.Add(fileDetails);
 
                     await _context.SaveChangesAsync();
@@ -252,31 +256,37 @@ namespace webShopping.Controllers
 
             if (ModelState.IsValid)
             {
-                var tracked = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
-                if (tracked == null) return NotFound();
-
-                tracked.Name = fileDetails.Name;
-                tracked.NameAr = fileDetails.NameAr;
-                tracked.Description = fileDetails.Description;
-                tracked.DescriptionAr = fileDetails.DescriptionAr;
-                tracked.Price = fileDetails.Price;
-                tracked.CategoryId = fileDetails.CategoryId;
-                tracked.IsHome = fileDetails.IsHome;
-                tracked.IsStock = fileDetails.IsStock;
-
-                if (fileDetails.File != null && fileDetails.File.Length > 0)
+                try
                 {
-                    tracked.File = fileDetails.File;
-                    await SaveProductImagesAsync(tracked, null);
+                    var tracked = await _context.Products.Include(p => p.Images).FirstOrDefaultAsync(p => p.Id == id);
+                    if (tracked == null) return NotFound();
+
+                    tracked.Name = fileDetails.Name;
+                    tracked.NameAr = fileDetails.NameAr ?? "";
+                    tracked.Description = fileDetails.Description ?? "";
+                    tracked.DescriptionAr = fileDetails.DescriptionAr ?? "";
+                    tracked.Price = fileDetails.Price;
+                    tracked.CategoryId = fileDetails.CategoryId;
+                    tracked.IsHome = fileDetails.IsHome;
+                    tracked.IsStock = fileDetails.IsStock;
+
+                    if (fileDetails.File != null && fileDetails.File.Length > 0)
+                    {
+                        tracked.File = fileDetails.File;
+                        await SaveProductImagesAsync(tracked, null);
+                    }
+
+                    await SaveProductImagesAsync(tracked, galleryFiles, tracked.Images.ToList());
+                    await _context.SaveChangesAsync();
+                    _toast.AddSuccessToastMessage(_localizer["ToastProductUpdated"]);
+                    return RedirectToAction(nameof(Index));
                 }
-
-                await SaveProductImagesAsync(tracked, galleryFiles, tracked.Images.ToList());
-                await _context.SaveChangesAsync();
-                _toast.AddSuccessToastMessage(_localizer["ToastProductUpdated"]);
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                    _toast.AddErrorToastMessage(_localizer["ToastProductError"]);
+                }
             }
-
-
 
             ViewData["CategoryId"] = new SelectList(_context.Categoties, "Id", "Name", fileDetails.CategoryId);
 
