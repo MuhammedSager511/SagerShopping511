@@ -1,0 +1,43 @@
+@inject ISiteContentService Site
+@{
+    ViewData["Title"] = Localizer["Contact"];
+    var s = Site.Settings;
+}
+<div class="section-title mb-3"><i class="bi bi-envelope"></i> @Localizer["ContactUs"]</div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="global-card p-4">
+            <form asp-action="Contact" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Name"]</label>
+                    <input name="name" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input name="email" type="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Subject"]</label>
+                    <input name="subject" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">@Localizer["Comment"]</label>
+                    <textarea name="message" class="form-control" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-accent">@Localizer["Send"]</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="global-card p-4">
+            <h5 class="fw-bold mb-3">@Localizer["Contact"]</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><i class="bi bi-envelope me-1"></i> <a href="mailto:@s.ContactEmail">@s.ContactEmail</a></li>
+                <li class="mb-2"><i class="bi bi-telephone me-1"></i> @s.ContactPhone</li>
+                <li class="mb-2"><i class="bi bi-geo-alt me-1"></i> @Site.T(s.ContactAddressEn, s.ContactAddressAr)</li>
+                <li><i class="bi bi-clock me-1"></i> @Site.T(s.ContactHoursEn, s.ContactHoursAr)</li>
+            </ul>
+        </div>
+    </div>
+</div>

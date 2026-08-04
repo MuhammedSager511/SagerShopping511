@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using NToastNotify;
+using System.Security.Claims;
 using webShopping.Data;
 using webShopping.Models;
 using webShopping.Services;
@@ -47,6 +48,70 @@ namespace webShopping.Controllers
             }
 
             return View(users);
+        }
+
+        public async Task<IActionResult> Edit(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(string id, ApplicationUser model)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            user.Name = model.Name;
+            user.LastName = model.LastName;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Addres = model.Addres;
+            user.City = model.City;
+            user.Country = model.Country;
+            user.PostaKodu = model.PostaKodu;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                _toast.AddSuccessToastMessage(_localizer["ToastProfileUpdated"]);
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetActive(string id, bool active)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (User.FindFirstValue(ClaimTypes.NameIdentifier) == id)
+            {
+                _toast.AddWarningToastMessage(_localizer["ToastProductUnavailable"]);
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            if (active)
+            {
+                await _userManager.SetLockoutEndDateAsync(user, null);
+                await _userManager.ResetAccessFailedCountAsync(user);
+                _toast.AddSuccessToastMessage(_localizer["AccountActivated"]);
+            }
+            else
+            {
+                await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+                _toast.AddSuccessToastMessage(_localizer["AccountSuspended"]);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> EditRole(string id)

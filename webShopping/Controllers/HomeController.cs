@@ -36,101 +36,215 @@ namespace webShopping.Controllers
             _notifications = notifications;
         }
 
-        public IActionResult Index(int page = 1, int pageSize = 8)
+        public IActionResult Index()
         {
-            var cacheKey = $"featured_products_p{page}_s{pageSize}";
-            if (!_cache.TryGetValue(cacheKey, out List<Product>? products))
+            const int take = 12;
+            var cacheKey = CatalogCache.HomeShowcase;
+            if (!_cache.TryGetValue(cacheKey, out HomePageVm? vm) || vm == null)
             {
-                products = db.Products
+                var allProducts = db.Products
                     .Include(p => p.categoty)
-                    .Where(i => i.IsHome)
+                    .Include(p => p.Brand)
                     .OrderByDescending(p => p.Id)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
                     .ToList();
-                _cache.Set(cacheKey, products, TimeSpan.FromMinutes(5));
+
+                var featured = allProducts.Where(i => i.IsHome).Take(take).ToList();
+                if (featured.Count == 0)
+                    featured = allProducts.Take(take).ToList();
+
+                var newest = allProducts.Take(take).ToList();
+
+                var bestIds = db.orderDetailses
+                    .GroupBy(d => d.productId)
+                    .Select(g => new { Id = g.Key, Sold = g.Sum(x => x.count) })
+                    .OrderByDescending(x => x.Sold)
+                    .Take(take)
+                    .Select(x => x.Id)
+                    .ToList();
+                var bestSellers = allProducts
+                    .Where(p => bestIds.Contains(p.Id))
+                    .OrderBy(p => bestIds.IndexOf(p.Id))
+                    .ToList();
+                if (bestSellers.Count == 0)
+                    bestSellers = newest.Take(Math.Min(8, newest.Count)).ToList();
+
+                var offers = allProducts
+                    .Where(p => p.SalePrice != null && p.SalePrice > 0 && p.SalePrice < p.Price)
+                    .Take(take)
+                    .ToList();
+
+                var categories = db.Categoties.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).Take(12).ToList();
+                var brands = db.Brands.Where(b => b.IsActive).OrderBy(b => b.SortOrder).ThenBy(b => b.Name).Take(12).ToList();
+                var banners = db.Banners.Where(b => b.IsActive).OrderBy(b => b.SortOrder).Take(6).ToList();
+                var reviews = db.ProductReviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).Take(6).ToList();
+
+                vm = new HomePageVm
+                {
+                    AllProducts = allProducts,
+                    Featured = featured,
+                    Newest = newest,
+                    BestSellers = bestSellers,
+                    Offers = offers,
+                    Categories = categories,
+                    Brands = brands,
+                    Banners = banners,
+                    Reviews = reviews
+                };
+                _cache.Set(cacheKey, vm, TimeSpan.FromMinutes(5));
             }
 
-            var totalProducts = db.Products.Count(i => i.IsHome);
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalProducts / pageSize));
-
-            ViewData["TotalPages"] = totalPages;
-            ViewData["CurrentPage"] = page;
-            return View(products);
+            ViewBag.Categories = vm.Categories;
+            ViewBag.Brands = vm.Brands;
+            ViewBag.Banners = vm.Banners;
+            ViewBag.AllProducts = vm.AllProducts;
+            ViewBag.Featured = vm.Featured;
+            ViewBag.Newest = vm.Newest;
+            ViewBag.BestSellers = vm.BestSellers;
+            ViewBag.Offers = vm.Offers;
+            ViewBag.HomeReviews = vm.Reviews;
+            return View(vm.AllProducts);
         }
 
-        public IActionResult Shop(int page = 1, int pageSize = 12, string sort = "newest", int? categoryId = null, string? q = null)
+        public IActionResult Shop(int page = 1, int pageSize = 12, string sort = "newest", int? categoryId = null, string? q = null, int? brandId = null, double? minPrice = null, double? maxPrice = null, bool? inStock = null, bool? onSale = null)
         {
-            var cacheKey = $"shop_p{page}_s{pageSize}_{sort}_c{categoryId}_q{q ?? ""}";
-            if (!_cache.TryGetValue(cacheKey, out (List<Product> products, int totalProducts) cached))
+            page = Math.Max(1, page);
+            var query = db.Products.AsNoTracking().Include(p => p.categoty).Include(p => p.Brand).AsQueryable();
+
+            if (categoryId.HasValue)
+                query = query.Where(p => p.CategoryId == categoryId);
+            if (brandId.HasValue)
+                query = query.Where(p => p.BrandId == brandId);
+            if (!string.IsNullOrWhiteSpace(q))
+                query = query.Where(p =>
+                    p.Name.Contains(q) || p.NameAr.Contains(q) ||
+                    p.Description.Contains(q) || p.DescriptionAr.Contains(q));
+            if (minPrice.HasValue)
+                query = query.Where(p => (p.SalePrice ?? p.Price) >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(p => (p.SalePrice ?? p.Price) <= maxPrice.Value);
+            if (inStock == true)
+                query = query.Where(p => p.StockQuantity > 0);
+            if (onSale == true)
+                query = query.Where(p => p.SalePrice != null && p.SalePrice > 0 && p.SalePrice < p.Price);
+
+            query = sort switch
             {
-                var query = db.Products.Include(p => p.categoty).AsQueryable();
+                "price_asc" => query.OrderBy(p => p.SalePrice ?? p.Price),
+                "price_desc" => query.OrderByDescending(p => p.SalePrice ?? p.Price),
+                "name" => query.OrderBy(p => p.Name),
+                "discount" => query.OrderByDescending(p => p.Price - (p.SalePrice ?? p.Price)),
+                _ => query.OrderByDescending(p => p.Id)
+            };
 
-                if (categoryId.HasValue)
-                    query = query.Where(p => p.CategoryId == categoryId);
-
-                if (!string.IsNullOrWhiteSpace(q))
-                    query = query.Where(p =>
-                        p.Name.Contains(q) || p.NameAr.Contains(q) ||
-                        p.Description.Contains(q) || p.DescriptionAr.Contains(q));
-
-                query = sort switch
-                {
-                    "price_asc" => query.OrderBy(p => p.Price),
-                    "price_desc" => query.OrderByDescending(p => p.Price),
-                    "name" => query.OrderBy(p => p.Name),
-                    _ => query.OrderByDescending(p => p.Id)
-                };
-
-                var totalProducts = query.Count();
-                var products = query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                cached = (products, totalProducts);
-                _cache.Set(cacheKey, cached, TimeSpan.FromMinutes(5));
-            }
-
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)cached.totalProducts / pageSize));
+            var totalProducts = query.Count();
+            var products = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalProducts / pageSize));
 
             ViewBag.KategoryId = categoryId;
+            ViewBag.BrandId = brandId;
+            ViewBag.Brands = db.Brands.Where(b => b.IsActive).OrderBy(b => b.SortOrder).ToList();
             ViewData["TotalPages"] = totalPages;
             ViewData["CurrentPage"] = page;
             ViewData["Sort"] = sort;
             ViewData["Query"] = q;
-            return View(cached.products);
+            ViewData["MinPrice"] = minPrice;
+            ViewData["MaxPrice"] = maxPrice;
+            ViewData["InStock"] = inStock;
+            ViewData["OnSale"] = onSale;
+            return View(products);
         }
 
-        public IActionResult Search(string q)
+        public IActionResult Search(string q, int? categoryId = null, string sort = "newest")
+            => RedirectToAction(nameof(Shop), new { q, categoryId, sort });
+
+        [HttpGet]
+        public IActionResult Suggest(string q)
         {
-            if (!string.IsNullOrWhiteSpace(q))
+            if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+                return Json(Array.Empty<object>());
+
+            var term = q.Trim();
+            var items = db.Products.AsNoTracking()
+                .Where(p => p.Name.Contains(term) || p.NameAr.Contains(term))
+                .OrderByDescending(p => p.Id)
+                .Take(8)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    nameAr = p.NameAr,
+                    price = p.SalePrice ?? p.Price,
+                    path = p.Path
+                })
+                .ToList();
+            return Json(items);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SubscribeNewsletter(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
             {
-                var results = db.Products
-                    .Include(p => p.categoty)
-                    .Where(i => i.Name.Contains(q) || i.NameAr.Contains(q) || i.Description.Contains(q) || i.DescriptionAr.Contains(q))
-                    .ToList();
-                ViewData["Query"] = q;
-                return View(results);
+                toast.AddErrorToastMessage(_localizer["ToastInvalidEmail"]);
+                return RedirectToAction(nameof(Index));
             }
 
-            return View(Enumerable.Empty<Product>());
+            email = email.Trim().ToLowerInvariant();
+            if (!db.NewsletterSubscribers.Any(s => s.Email == email))
+            {
+                db.NewsletterSubscribers.Add(new NewsletterSubscriber { Email = email });
+                db.SaveChanges();
+            }
+            toast.AddSuccessToastMessage(_localizer["ToastSubscribed"]);
+            CatalogCache.Invalidate(_cache);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public IActionResult Contact()
+        {
+            ViewData["Title"] = _localizer["Contact"];
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Contact(string name, string email, string subject, string message)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(message))
+            {
+                toast.AddErrorToastMessage(_localizer["ToastFormIncomplete"]);
+                return View();
+            }
+
+            db.ContactMessages.Add(new ContactMessage
+            {
+                Name = name.Trim(),
+                Email = email.Trim(),
+                Subject = (subject ?? "").Trim(),
+                Message = message.Trim()
+            });
+            db.SaveChanges();
+            toast.AddSuccessToastMessage(_localizer["ToastMessageSent"]);
+            return RedirectToAction(nameof(Contact));
+        }
+
+        public IActionResult Faq()
+        {
+            ViewData["Title"] = _localizer["Faqs"];
+            var items = db.FaqItems.Where(f => f.IsActive).OrderBy(f => f.SortOrder).ToList();
+            return View(items);
         }
 
         public IActionResult CategoryDetails(int id)
-        {
-            var product = db.Products
-                .Include(p => p.categoty)
-                .Where(i => i.CategoryId == id)
-                .ToList();
-            ViewBag.KategoryId = id;
-            return View(product);
-        }
+            => RedirectToAction(nameof(Shop), new { categoryId = id });
 
         public IActionResult Details(int Id)
         {
             var product = db.Products
                 .Include(p => p.categoty)
+                .Include(p => p.Brand)
                 .Include(p => p.Images.OrderBy(i => i.SortOrder))
                 .FirstOrDefault(i => i.Id == Id);
 
@@ -144,6 +258,9 @@ namespace webShopping.Controllers
 
             ViewBag.Reviews = reviews;
             ViewBag.AvgRating = reviews.Count > 0 ? reviews.Average(r => r.Rating) : 0;
+            ViewBag.Similar = db.Products.Include(p => p.categoty)
+                .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id)
+                .OrderByDescending(p => p.Id).Take(4).ToList();
             ViewData["MetaDescription"] = LocalizedContent.ProductDescription(product, _localizer);
 
             var cart = new ShoppingCart
@@ -176,7 +293,7 @@ namespace webShopping.Controllers
                 Scart.Count = 1;
 
             var product = db.Products.Find(Scart.ProductId);
-            if (product == null || !product.IsStock)
+            if (product == null || product.StockQuantity <= 0)
             {
                 toast.AddErrorToastMessage(_localizer["ToastProductUnavailable"]);
                 return RedirectToAction(nameof(Details), new { id = Scart.ProductId });
@@ -188,6 +305,14 @@ namespace webShopping.Controllers
 
             var existing = db.ShoppingCarts.FirstOrDefault(
                 u => u.ApplicationUserId == claim && u.ProductId == Scart.ProductId);
+
+            var alreadyInCart = existing?.Count ?? 0;
+            var requestedTotal = alreadyInCart + Scart.Count;
+            if (requestedTotal > product.StockQuantity)
+            {
+                toast.AddWarningToastMessage(_localizer["ToastInsufficientStock"]);
+                return RedirectToAction(nameof(Details), new { id = Scart.ProductId });
+            }
 
             if (existing == null)
             {
@@ -253,9 +378,21 @@ namespace webShopping.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(string? rid, [FromServices] IConfiguration config)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var requestId = rid ?? Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            var cached = RecentErrors.Get(requestId) ?? RecentErrors.Get(rid);
+
+            var showDetails = config.GetValue("Diagnostics:ShowErrorDetails", false);
+            return View(new ErrorViewModel
+            {
+                RequestId = requestId,
+                Path = cached?.Path,
+                ExceptionType = cached?.ExceptionType,
+                ExceptionMessage = cached?.ExceptionMessage,
+                StackTrace = cached?.StackTrace,
+                ShowDetails = showDetails && !string.IsNullOrWhiteSpace(cached?.ExceptionMessage)
+            });
         }
 
         public IActionResult About() => View();

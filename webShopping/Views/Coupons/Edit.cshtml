@@ -1,0 +1,5 @@
+@model webShopping.Models.Coupon
+@{
+    ViewData["Title"] = Localizer["Edit"] + " " + Localizer["Coupons"];
+}
+@await Html.PartialAsync("Create", Model)

@@ -1,25 +1,94 @@
 @model webShopping.Models.SiteSettings
 @{
     ViewData["Title"] = Localizer["SiteSettings"];
-    var links = (IEnumerable<webShopping.Models.QuickLink>)ViewBag.QuickLinks;
+    var links = (IEnumerable<webShopping.Models.QuickLink>)(ViewBag.QuickLinks ?? Enumerable.Empty<webShopping.Models.QuickLink>());
+    var banks = (IEnumerable<webShopping.Models.BankAccount>)(ViewBag.BankAccounts ?? Enumerable.Empty<webShopping.Models.BankAccount>());
 }
 
 <div class="section-title mb-4"><i class="bi bi-gear"></i> @Localizer["SiteSettings"]</div>
 
 <ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#texts">@Localizer["Texts"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#about">@Localizer["About"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#contact">@Localizer["Contact"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#bank">@Localizer["BankAccounts"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#links">@Localizer["QuickLinks"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#legal">@Localizer["LegalPages"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#branding">@Localizer["BrandingTheme"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#texts">@Localizer["Texts"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#about">@Localizer["About"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#contact">@Localizer["Contact"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#bank">@Localizer["BankAccounts"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#links">@Localizer["QuickLinks"]</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#legal">@Localizer["LegalPages"]</button></li>
 </ul>
 
-<form asp-action="Index" method="post">
-    @Html.AntiForgeryToken()
+<form asp-action="Index" method="post" id="siteSettingsForm" enctype="multipart/form-data">
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="texts">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+        <div class="tab-pane fade show active" id="branding">
+            <div class="global-card p-4 mb-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-palette2"></i> @Localizer["BrandingTheme"]</h6>
+                <p class="text-muted small mb-3">@Localizer["BrandingThemeHint"]</p>
+                <div class="row g-3 align-items-start">
+                    <div class="col-md-3">
+                        <label class="form-label">@Localizer["SiteName"] (EN)</label>
+                        <input asp-for="SiteNameEn" class="form-control" placeholder="Sager" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">@Localizer["SiteNameHighlight"] (EN)</label>
+                        <input asp-for="SiteNameHighlightEn" class="form-control" placeholder="Shop" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">@Localizer["SiteName"] (AR)</label>
+                        <input asp-for="SiteNameAr" class="form-control" dir="rtl" placeholder="ساجر" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">@Localizer["SiteNameHighlight"] (AR)</label>
+                        <input asp-for="SiteNameHighlightAr" class="form-control" dir="rtl" placeholder="شوب" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@Localizer["ThemePrimary"]</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="themePrimaryColor"
+                                   value="@(string.IsNullOrWhiteSpace(Model.ThemePrimary) ? "#151528" : Model.ThemePrimary)"
+                                   title="@Localizer["ThemePrimary"]"
+                                   oninput="document.getElementById('ThemePrimary').value=this.value" />
+                            <input asp-for="ThemePrimary" class="form-control" pattern="^#?[0-9A-Fa-f]{6}$" placeholder="#151528" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@Localizer["ThemeAccent"]</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="themeAccentColor"
+                                   value="@(string.IsNullOrWhiteSpace(Model.ThemeAccent) ? "#e23b58" : Model.ThemeAccent)"
+                                   title="@Localizer["ThemeAccent"]"
+                                   oninput="document.getElementById('ThemeAccent').value=this.value" />
+                            <input asp-for="ThemeAccent" class="form-control" pattern="^#?[0-9A-Fa-f]{6}$" placeholder="#e23b58" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">@Localizer["SiteLogo"]</label>
+                        <input type="file" name="logoFile" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif" />
+                        <div class="form-text">@Localizer["SiteLogoHint"]</div>
+                        @{
+                            var logoPreview = !string.IsNullOrWhiteSpace(Model.LogoPath)
+                                ? Url.Content($"~/files/{Model.LogoPath}")
+                                : Url.Content("~/images/image/logo.png");
+                        }
+                        <div class="mt-2 d-flex align-items-center gap-2 p-2 rounded border bg-light">
+                            <img src="@logoPreview" alt="logo" width="48" height="48" style="object-fit:contain" />
+                            <span class="small text-muted">@Localizer["CurrentLogo"]</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap align-items-center gap-3 p-3 rounded border"
+                             style="background:@(string.IsNullOrWhiteSpace(Model.ThemePrimary)? "#151528": Model.ThemePrimary);color:#fff">
+                            <span class="fw-bold" style="font-size:1.15rem">
+                                @(string.IsNullOrWhiteSpace(Model.SiteNameEn)?"Sager":Model.SiteNameEn)<span style="color:@(string.IsNullOrWhiteSpace(Model.ThemeAccent)?"#e23b58":Model.ThemeAccent)">@(string.IsNullOrWhiteSpace(Model.SiteNameHighlightEn)?"Shop":Model.SiteNameHighlightEn)</span>
+                            </span>
+                            <span class="badge" style="background:@(string.IsNullOrWhiteSpace(Model.ThemeAccent)?"#e23b58":Model.ThemeAccent)">@Localizer["ThemePreview"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="texts">
+            <div class="global-card p-4 mb-3">
                 <h6 class="fw-bold mb-3">@Localizer["HeroTitle"]</h6>
                 <div class="row g-3">
                     <div class="col-md-6">
@@ -51,7 +120,7 @@
         </div>
 
         <div class="tab-pane fade" id="about">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+            <div class="global-card p-4 mb-3">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Title EN</label>
@@ -74,7 +143,7 @@
         </div>
 
         <div class="tab-pane fade" id="contact">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+            <div class="global-card p-4 mb-3">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">@Localizer["Email"]</label>
@@ -103,55 +172,32 @@
                     <div class="col-md-6"><label class="form-label">Facebook</label><input asp-for="FacebookUrl" class="form-control" /></div>
                     <div class="col-md-6"><label class="form-label">Instagram</label><input asp-for="InstagramUrl" class="form-control" /></div>
                     <div class="col-md-6"><label class="form-label">Twitter/X</label><input asp-for="TwitterUrl" class="form-control" /></div>
-                    <div class="col-md-6"><label class="form-label">WhatsApp</label><input asp-for="WhatsAppUrl" class="form-control" /></div>
+                    <div class="col-md-6">
+                        <label class="form-label">WhatsApp</label>
+                        <input asp-for="WhatsAppUrl" class="form-control" placeholder="https://wa.me/905432255024 أو +905432255024" />
+                        <div class="form-text">رقم مع رمز الدولة، أو رابط wa.me كامل</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="tab-pane fade" id="bank">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
-                <p class="text-muted small mb-3">@Localizer["BankAccountsHint"]</p>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">@Localizer["BankAccounts"] (EN)</label>
-                        <textarea asp-for="BankTransferInfoEn" class="form-control font-monospace" rows="10"></textarea>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">@Localizer["BankAccounts"] (AR)</label>
-                        <textarea asp-for="BankTransferInfoAr" class="form-control font-monospace" rows="10" dir="rtl"></textarea>
-                    </div>
-                </div>
+            <div class="alert alert-info border-0 mb-0">
+                <i class="bi bi-info-circle"></i>
+                @Localizer["BankAccountsManageHint"]
+                <span class="d-block small mt-1">@Localizer["BankAccounts"] — @Localizer["Edit"] / @Localizer["Delete"] أسفل الصفحة.</span>
             </div>
         </div>
 
         <div class="tab-pane fade" id="links">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
-                <p class="text-muted small">@Localizer["QuickLinksHint"]</p>
-                <table class="table table-sm">
-                    <thead><tr><th>EN</th><th>AR</th><th>URL</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach (var link in links)
-                        {
-                            <tr>
-                                <td>@link.TitleEn</td>
-                                <td>@link.TitleAr</td>
-                                <td><code>@link.Url</code></td>
-                                <td>
-                                    <form asp-action="DeleteQuickLink" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@link.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <div class="alert alert-info border-0 mb-0">
+                <i class="bi bi-info-circle"></i>
+                @Localizer["QuickLinksHint"]
             </div>
         </div>
 
         <div class="tab-pane fade" id="legal">
-            <div class="card border-0 shadow-sm p-4 mb-3" style="border-radius:12px">
+            <div class="global-card p-4 mb-3">
                 <h6 class="fw-bold mb-3">@Localizer["TermsOfUse"]</h6>
                 <div class="row g-3">
                     <div class="col-md-6"><label asp-for="TermsTitleEn" class="form-label">Title EN</label><input asp-for="TermsTitleEn" class="form-control" /></div>
@@ -177,13 +223,126 @@
         </div>
     </div>
 
-    <button type="submit" class="btn btn-accent btn-lg"><i class="bi bi-save"></i> @Localizer["Save"]</button>
+    <button type="submit" class="btn btn-accent btn-lg mt-2"><i class="bi bi-save"></i> @Localizer["Save"]</button>
 </form>
 
-<div class="card border-0 shadow-sm p-4 mt-4" style="border-radius:12px">
+<div class="global-card p-4 mt-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-bank"></i> @Localizer["BankAccounts"]</h6>
+    <p class="text-muted small mb-3">@Localizer["BankAccountsManageHint"]</p>
+    @if (banks.Any())
+    {
+        <div class="table-responsive mb-4">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>@Localizer["BankName"]</th>
+                        <th>@Localizer["AccountNumber"]</th>
+                        <th>IBAN</th>
+                        <th>@Localizer["Beneficiary"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in banks)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@b.BankNameEn</div>
+                                <small class="text-muted" dir="rtl">@b.BankNameAr</small>
+                            </td>
+                            <td><code>@b.AccountNumber</code></td>
+                            <td>@(string.IsNullOrWhiteSpace(b.Iban) ? "—" : b.Iban)</td>
+                            <td>@b.BeneficiaryEn</td>
+                            <td class="text-end">
+                                <form asp-action="DeleteBankAccount" method="post" class="d-inline"
+                                      onsubmit="return confirm('@Localizer["ConfirmDeleteBankAccount"]');">
+                                    <input type="hidden" name="id" value="@b.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> @Localizer["Delete"]
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border mb-4">@Localizer["NoBankAccountsYet"]</div>
+    }
+
+    <h6 class="fw-bold mb-3"><i class="bi bi-plus-lg"></i> @Localizer["AddBankAccount"]</h6>
+    <form asp-action="AddBankAccount" method="post" class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["BankName"] (EN)</label>
+            <input name="BankNameEn" class="form-control" placeholder="Sham Bank" required />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["BankName"] (AR)</label>
+            <input name="BankNameAr" class="form-control" placeholder="بنك الشام" dir="rtl" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">@Localizer["AccountNumber"]</label>
+            <input name="AccountNumber" class="form-control" required />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">IBAN</label>
+            <input name="Iban" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">@Localizer["SortOrder"]</label>
+            <input name="SortOrder" type="number" class="form-control" value="1" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["Beneficiary"] (EN)</label>
+            <input name="BeneficiaryEn" class="form-control" value="SagerShop" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["Beneficiary"] (AR)</label>
+            <input name="BeneficiaryAr" class="form-control" value="SagerShop" dir="rtl" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["Notes"] (EN)</label>
+            <input name="NotesEn" class="form-control" placeholder="Cash / branch notes" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">@Localizer["Notes"] (AR)</label>
+            <input name="NotesAr" class="form-control" placeholder="ملاحظات" dir="rtl" />
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> @Localizer["AddBankAccount"]
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="global-card p-4 mt-4">
+    <h6 class="fw-bold mb-3">@Localizer["QuickLinks"]</h6>
+    <table class="table table-sm mb-4">
+        <thead><tr><th>EN</th><th>AR</th><th>URL</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var link in links)
+            {
+                <tr>
+                    <td>@link.TitleEn</td>
+                    <td>@link.TitleAr</td>
+                    <td><code>@link.Url</code></td>
+                    <td>
+                        <form asp-action="DeleteQuickLink" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@link.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
     <h6 class="fw-bold mb-3">@Localizer["AddQuickLink"]</h6>
     <form asp-action="AddQuickLink" method="post" class="row g-2 align-items-end">
-        @Html.AntiForgeryToken()
         <div class="col-md-3"><input name="TitleEn" class="form-control" placeholder="Title EN" required /></div>
         <div class="col-md-3"><input name="TitleAr" class="form-control" placeholder="العنوان" dir="rtl" required /></div>
         <div class="col-md-3"><input name="Url" class="form-control" placeholder="/Home/Shop" required /></div>

@@ -28,7 +28,9 @@
         <table class="table table-hover mb-0 global-table">
             <thead>
                 <tr>
+                    <th style="width:72px">@Localizer["CategoryImage"]</th>
                     <th>@Localizer["CategoryName"]</th>
+                    <th style="width:100px">@Localizer["SortBy"]</th>
                     <th>@Localizer["Actions"]</th>
                 </tr>
             </thead>
@@ -36,7 +38,23 @@
                 @foreach (var item in Model)
                 {
                     <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.ImagePath))
+                            {
+                                <img src="~/files/@item.ImagePath" alt="@item.Name"
+                                     class="rounded-circle" width="48" height="48"
+                                     style="object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-muted"
+                                      style="width:48px;height:48px;font-weight:700;">
+                                    @(string.IsNullOrEmpty(item.Name) ? "?" : item.Name.Trim()[0])
+                                </span>
+                            }
+                        </td>
                         <td class="fw-semibold">@item.Name</td>
+                        <td>@item.SortOrder</td>
                         <td>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-pencil"></i> @Localizer["Edit"]

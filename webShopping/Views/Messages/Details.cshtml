@@ -1,0 +1,41 @@
+@model webShopping.Models.ContactMessage
+@{
+    ViewData["Title"] = Localizer["Messages"];
+}
+<div class="section-title mb-3">@Localizer["Messages"] #@Model.Id</div>
+<div class="global-card p-4 col-lg-8">
+    <p class="mb-1"><strong>@Model.Name</strong> · <a href="mailto:@Model.Email">@Model.Email</a></p>
+    <p class="text-muted small">@Model.CreatedAt.ToLocalTime().ToString("g")</p>
+    @if (!string.IsNullOrEmpty(Model.Subject))
+    {
+        <p><strong>@Localizer["Subject"]:</strong> @Model.Subject</p>
+    }
+    <div class="border rounded p-3 mb-3 bg-light">@Model.Message</div>
+
+    @if (!string.IsNullOrEmpty(Model.AdminReply))
+    {
+        <div class="alert alert-success">
+            <strong>@Localizer["Reply"]</strong>
+            <div>@Model.AdminReply</div>
+            @if (Model.RepliedAt.HasValue)
+            {
+                <small class="text-muted">@Model.RepliedAt.Value.ToLocalTime().ToString("g")</small>
+            }
+        </div>
+    }
+
+    <form asp-action="Reply" method="post" class="mb-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <label class="form-label">@Localizer["Reply"]</label>
+        <textarea name="adminReply" class="form-control mb-2" rows="4">@Model.AdminReply</textarea>
+        <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+    </form>
+
+    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('@Localizer["ConfirmDelete"]');">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="btn btn-outline-danger">@Localizer["Delete"]</button>
+    </form>
+    <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Back"]</a>
+</div>

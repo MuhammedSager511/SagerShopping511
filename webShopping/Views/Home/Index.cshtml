@@ -2,60 +2,271 @@
 @inject ISiteContentService Site
 @{
     ViewData["Title"] = Localizer["Home"];
-    int totalPages = ViewData["TotalPages"] != null ? (int)ViewData["TotalPages"] : 1;
-    int currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
+    ViewData["HomePage"] = true;
     var s = Site.Settings;
+    var categories = ViewBag.Categories as IEnumerable<Categoty> ?? Enumerable.Empty<Categoty>();
+    var brands = ViewBag.Brands as IEnumerable<Brand> ?? Enumerable.Empty<Brand>();
+    var banners = ViewBag.Banners as IEnumerable<Banner> ?? Enumerable.Empty<Banner>();
+    var featured = ViewBag.Featured as IEnumerable<Product> ?? Enumerable.Empty<Product>();
+    var newest = ViewBag.Newest as IEnumerable<Product> ?? Enumerable.Empty<Product>();
+    var best = ViewBag.BestSellers as IEnumerable<Product> ?? Enumerable.Empty<Product>();
+    var offers = ViewBag.Offers as IEnumerable<Product> ?? Enumerable.Empty<Product>();
+    var reviews = ViewBag.HomeReviews as IEnumerable<ProductReview> ?? Enumerable.Empty<ProductReview>();
+    var allProducts = Model ?? Enumerable.Empty<Product>();
+    var brandHeadline = Site.T(s.HeroTitleEn, s.HeroTitleAr);
+    var brandLead = Site.T(s.HeroSubtitleEn, s.HeroSubtitleAr);
 }
 
-<div class="hero-banner">
-    <h1>@Site.T(s.HeroTitleEn, s.HeroTitleAr)</h1>
-    <p>@Site.T(s.HeroSubtitleEn, s.HeroSubtitleAr)</p>
-    <div class="trust-badges">
-        <div class="trust-badge"><i class="bi bi-truck"></i> @Localizer["FreeShipping"]</div>
-        <div class="trust-badge"><i class="bi bi-shield-lock"></i> @Localizer["SecurePayment"]</div>
-        <div class="trust-badge"><i class="bi bi-headset"></i> @Localizer["Support247"]</div>
-    </div>
-    <a asp-action="Shop" class="btn btn-accent mt-3 px-4 py-2">
-        <i class="bi bi-shop"></i> @Localizer["ShopAll"]
-    </a>
-</div>
-
-<div class="section-title">
-    <i class="bi bi-stars text-warning"></i> @Localizer["FeaturedProducts"]
-</div>
-
-<div class="row g-4">
-    @foreach (var item in Model)
-    {
-        <div class="col-6 col-md-4 col-lg-3">
-            <partial name="_ProductCard" model="item" />
+@if (banners.Any())
+{
+    <section class="home-banners">
+        <div id="homeBannerCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                @{ var bi = 0; }
+                @foreach (var b in banners)
+                {
+                    <div class="carousel-item @(bi == 0 ? "active" : "")">
+                        <a href="@b.LinkUrl" class="home-banner-slide">
+                            @if (!string.IsNullOrEmpty(b.ImagePath))
+                            {
+                                <img src="~/files/@b.ImagePath" alt="@Site.T(b.TitleEn, b.TitleAr)" />
+                            }
+                            <div class="home-banner-caption">
+                                <h2>@Site.T(b.TitleEn, b.TitleAr)</h2>
+                                <p>@Site.T(b.SubtitleEn, b.SubtitleAr)</p>
+                            </div>
+                        </a>
+                    </div>
+                    bi++;
+                }
+            </div>
+            @if (banners.Count() > 1)
+            {
+                <button class="carousel-control-prev" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                <button class="carousel-control-next" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+            }
         </div>
-    }
-</div>
-
-@if (!Model.Any())
+    </section>
+}
+else
 {
-    <div class="alert alert-info text-center mt-3">@Localizer["NoProducts"]</div>
+    <section class="home-intro" data-home-intro>
+        <div class="home-intro-orb home-intro-orb--a" aria-hidden="true"></div>
+        <div class="home-intro-orb home-intro-orb--b" aria-hidden="true"></div>
+        <div class="home-intro-inner">
+            @{
+                var introS = Site.Settings;
+                var introName = Localizer.IsArabic && !string.IsNullOrWhiteSpace(introS.SiteNameAr) ? introS.SiteNameAr : (string.IsNullOrWhiteSpace(introS.SiteNameEn) ? "Sager" : introS.SiteNameEn);
+                var introHi = Localizer.IsArabic && !string.IsNullOrWhiteSpace(introS.SiteNameHighlightAr) ? introS.SiteNameHighlightAr : (string.IsNullOrWhiteSpace(introS.SiteNameHighlightEn) ? "Shop" : introS.SiteNameHighlightEn);
+            }
+            <p class="home-brand" data-reveal>@introName<span>@introHi</span><span class="home-brand-line" aria-hidden="true"></span></p>
+            <h1 data-reveal data-delay="1">@brandHeadline</h1>
+            <p class="home-lead" data-reveal data-delay="2">@brandLead</p>
+            <div class="home-cta" data-reveal data-delay="3">
+                <a href="#catalog" class="btn btn-accent px-4 home-btn-shine">@Localizer["ShopAll"]</a>
+                <a asp-action="Shop" class="btn btn-ghost px-4">@Localizer["BrowseFullCatalog"]</a>
+            </div>
+        </div>
+    </section>
 }
 
-@if (totalPages > 1)
+@if (categories.Any())
 {
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-            @if (currentPage > 1)
+    <section id="categories" class="home-section home-categories">
+        <div class="home-section-head"><h2>@Localizer["ShopByCategory"]</h2><p>@Localizer["HomeCategoriesLead"]</p></div>
+        <div class="home-category-row">
+            @foreach (var cat in categories)
             {
-                <li class="page-item"><a class="page-link" href="?page=@(currentPage - 1)">&laquo;</a></li>
+                var catName = LocalizedContent.CategoryName(cat, Localizer);
+                var catImg = !string.IsNullOrEmpty(cat.ImagePath) ? Url.Content($"~/files/{cat.ImagePath}") : null;
+                var initial = string.IsNullOrWhiteSpace(catName) ? "?" : catName.Trim()[0].ToString().ToUpperInvariant();
+                <a class="home-category-link" asp-action="Shop" asp-route-categoryId="@cat.Id">
+                    <span class="home-category-avatar">
+                        @if (catImg != null) { <img src="@catImg" alt="@catName" loading="lazy" /> }
+                        else { <span class="home-category-fallback" aria-hidden="true">@initial</span> }
+                    </span>
+                    <span class="home-category-name">@catName</span>
+                </a>
             }
-            @for (int i = 1; i <= totalPages; i++)
-            {
-                <li class="page-item @(i == currentPage ? "active" : "")">
-                    <a class="page-link" href="?page=@i">@i</a>
-                </li>
-            }
-            @if (currentPage < totalPages)
-            {
-                <li class="page-item"><a class="page-link" href="?page=@(currentPage + 1)">&raquo;</a></li>
-            }
-        </ul>
-    </nav>
+        </div>
+    </section>
 }
+
+<section id="catalog" class="home-section home-catalog">
+    <div class="home-section-head">
+        <h2>@Localizer["Products"]</h2>
+        <p>@Localizer["HomeFeaturedLead"]</p>
+    </div>
+
+    <ul class="nav home-product-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-btn-all" data-bs-toggle="tab" data-bs-target="#tab-all" type="button" role="tab" aria-controls="tab-all" aria-selected="true">
+                @Localizer["AllProducts"]
+                <span class="home-tab-count">@allProducts.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-featured" data-bs-toggle="tab" data-bs-target="#tab-featured" type="button" role="tab" aria-controls="tab-featured" aria-selected="false">
+                @Localizer["FeaturedProducts"]
+                <span class="home-tab-count">@featured.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-best" data-bs-toggle="tab" data-bs-target="#tab-best" type="button" role="tab" aria-controls="tab-best" aria-selected="false">
+                @Localizer["BestSellers"]
+                <span class="home-tab-count">@best.Count()</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-btn-newest" data-bs-toggle="tab" data-bs-target="#tab-newest" type="button" role="tab" aria-controls="tab-newest" aria-selected="false">
+                @Localizer["Newest"]
+                <span class="home-tab-count">@newest.Count()</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content home-tab-content">
+        <div class="tab-pane fade show active" id="tab-all" role="tabpanel" aria-labelledby="tab-btn-all" tabindex="0">
+            @if (allProducts.Any())
+            {
+                <div class="home-product-grid">
+                    @foreach (var item in allProducts)
+                    {
+                        <div class="home-product-item"><partial name="_ProductCard" model="item" /></div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">@Localizer["NoProducts"]</div>
+            }
+        </div>
+        <div class="tab-pane fade" id="tab-featured" role="tabpanel" aria-labelledby="tab-btn-featured" tabindex="0">
+            @if (featured.Any())
+            {
+                <div class="home-product-grid">
+                    @foreach (var item in featured)
+                    {
+                        <div class="home-product-item"><partial name="_ProductCard" model="item" /></div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">@Localizer["NoProducts"]</div>
+            }
+        </div>
+        <div class="tab-pane fade" id="tab-best" role="tabpanel" aria-labelledby="tab-btn-best" tabindex="0">
+            @if (best.Any())
+            {
+                <div class="home-product-grid">
+                    @foreach (var item in best)
+                    {
+                        <div class="home-product-item"><partial name="_ProductCard" model="item" /></div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">@Localizer["NoProducts"]</div>
+            }
+        </div>
+        <div class="tab-pane fade" id="tab-newest" role="tabpanel" aria-labelledby="tab-btn-newest" tabindex="0">
+            @if (newest.Any())
+            {
+                <div class="home-product-grid">
+                    @foreach (var item in newest)
+                    {
+                        <div class="home-product-item"><partial name="_ProductCard" model="item" /></div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning text-center">@Localizer["NoProducts"]</div>
+            }
+        </div>
+    </div>
+</section>
+
+@if (offers.Any())
+{
+    <section class="home-section home-offers">
+        <div class="home-section-head"><h2>@Localizer["Offers"]</h2></div>
+        <div class="home-product-grid">
+            @foreach (var item in offers)
+            {
+                <div class="home-product-item"><partial name="_ProductCard" model="item" /></div>
+            }
+        </div>
+    </section>
+}
+
+@if (brands.Any())
+{
+    <section class="home-section">
+        <div class="home-section-head"><h2>@Localizer["Brands"]</h2></div>
+        <div class="home-brand-row">
+            @foreach (var b in brands)
+            {
+                <a class="home-brand-chip" asp-action="Shop" asp-route-brandId="@b.Id">
+                    @if (!string.IsNullOrEmpty(b.ImagePath))
+                    {
+                        <img src="~/files/@b.ImagePath" alt="@Site.T(b.Name, b.NameAr)" loading="lazy" />
+                    }
+                    else
+                    {
+                        <span>@Site.T(b.Name, b.NameAr)</span>
+                    }
+                </a>
+            }
+        </div>
+    </section>
+}
+
+@if (reviews.Any())
+{
+    <section class="home-section home-reviews">
+        <div class="home-section-head"><h2>@Localizer["CustomerReviews"]</h2></div>
+        <div class="home-reviews-grid">
+            @foreach (var r in reviews)
+            {
+                <div class="home-review-card">
+                    <div class="text-warning mb-1">
+                        @for (var i = 1; i <= 5; i++)
+                        {
+                            <i class="bi @(i <= r.Rating ? "bi-star-fill" : "bi-star")"></i>
+                        }
+                    </div>
+                    <p>@r.Comment</p>
+                    <strong>@r.UserName</strong>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<section class="home-section home-newsletter">
+    <div class="home-newsletter-inner">
+        <h2>@Localizer["Newsletter"]</h2>
+        <p>@Localizer["NewsletterLead"]</p>
+        <form asp-action="SubscribeNewsletter" method="post" class="home-newsletter-form" data-no-loader>
+            @Html.AntiForgeryToken()
+            <input type="email" name="email" class="form-control" required placeholder="email@example.com" />
+            <button type="submit" class="btn btn-accent">@Localizer["Subscribe"]</button>
+        </form>
+    </div>
+</section>
+
+<section class="home-closing">
+    <div class="home-closing-glow" aria-hidden="true"></div>
+    <div class="home-closing-inner">
+        <h2>@Localizer["HomeClosingTitle"]</h2>
+        <p>@Localizer["HomeClosingLead"]</p>
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a asp-action="Shop" class="btn btn-accent btn-lg px-4 home-btn-shine">@Localizer["StartShopping"]</a>
+            <a asp-action="Contact" class="btn btn-outline-light btn-lg px-4">@Localizer["Contact"]</a>
+            <a asp-action="Faq" class="btn btn-outline-light btn-lg px-4">@Localizer["Faqs"]</a>
+        </div>
+    </div>
+</section>

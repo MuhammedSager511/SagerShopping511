@@ -98,7 +98,7 @@
                     {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-semibold">@item.product.Name</div>
+                                <div class="fw-semibold">@LocalizedContent.ProductName(item.product, Localizer)</div>
                                 <small class="text-muted">@Localizer["Quantity"]: @item.count</small>
                             </div>
                             <strong class="text-danger">@Currency.Format(item.Price * item.count)</strong>
@@ -113,19 +113,7 @@
                 <div class="card-body d-grid gap-2">
                     @if (User.IsInRole(Diger.Role_Admin))
                     {
-                        @if (Model.OrderHeader.orderStatus == Diger.status_confirmed)
-                        {
-                            <div class="mb-2">
-                                <label class="form-label">@Localizer["TrackingNumber"]</label>
-                                <input asp-for="OrderHeader.TrackingNumber" class="form-control" placeholder="TRK-..." />
-                            </div>
-                            <button type="submit" class="btn btn-accent btn-lg"
-                                    formaction="/Order/ShipIt" formmethod="post">
-                                <i class="bi bi-truck"></i> @Localizer["Ship"]
-                            </button>
-                        }
-                        @if (Model.OrderHeader.orderStatus == Diger.status_payment_review ||
-                             Model.OrderHeader.orderStatus == Diger.status_pending)
+                        @if (OrderStatusHelper.CanVerifyPayment(Model.OrderHeader.orderStatus))
                         {
                             <div class="alert alert-info small mb-2">
                                 <i class="bi bi-bank"></i> @Localizer["AdminVerifyPaymentHint"]
@@ -135,11 +123,36 @@
                                 <i class="bi bi-patch-check"></i> @Localizer["VerifyPayment"]
                             </button>
                         }
+
+                        @if (OrderStatusHelper.CanShip(Model.OrderHeader.orderStatus))
+                        {
+                            <div class="alert alert-success small mb-2">
+                                <i class="bi bi-check-circle"></i> @Localizer["OrderStageConfirmed"]
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">@Localizer["TrackingNumber"]</label>
+                                <input asp-for="OrderHeader.TrackingNumber" class="form-control" placeholder="TRK-..." />
+                            </div>
+                            <button type="submit" class="btn btn-accent btn-lg"
+                                    formaction="/Order/ShipIt" formmethod="post">
+                                <i class="bi bi-truck"></i> @Localizer["Ship"]
+                            </button>
+                        }
+
                         @if (Model.OrderHeader.orderStatus == Diger.status_awaiting_payment)
                         {
                             <div class="alert alert-warning small mb-0">
                                 <i class="bi bi-hourglass-split"></i> @Localizer["AwaitingCustomerPayment"]
                             </div>
+                        }
+
+                        @if (Model.OrderHeader.orderStatus != Diger.status_cancelled && Model.OrderHeader.orderStatus != Diger.status_cargo)
+                        {
+                            <button type="submit" class="btn btn-outline-danger"
+                                    formaction="/Order/Cancel" formmethod="post"
+                                    onclick="return confirm('@Localizer["ConfirmDelete"]');">
+                                <i class="bi bi-x-circle"></i> @Localizer["Cancelled"]
+                            </button>
                         }
                     }
                     else
@@ -154,10 +167,20 @@
                                 <i class="bi bi-search"></i> @Localizer["PaymentUnderReviewMessage"]
                             </div>
                         }
-                        else if (Model.OrderHeader.orderStatus == Diger.status_confirmed)
+                        else if (Model.OrderHeader.orderStatus == Diger.status_confirmed || Model.OrderHeader.orderStatus == Diger.status_preparing)
                         {
                             <div class="alert alert-success mb-0 text-center">
                                 <i class="bi bi-check-circle"></i> @Localizer["OrderConfirmedMessage"]
+                            </div>
+                        }
+                        else if (Model.OrderHeader.orderStatus == Diger.status_cargo)
+                        {
+                            <div class="alert alert-info mb-0 text-center">
+                                <i class="bi bi-truck"></i> @Localizer["OrderStageShipped"]
+                                @if (!string.IsNullOrEmpty(Model.OrderHeader.TrackingNumber))
+                                {
+                                    <div class="mt-1"><code>@Model.OrderHeader.TrackingNumber</code></div>
+                                }
                             </div>
                         }
                         else
@@ -167,6 +190,9 @@
                             </div>
                         }
                     }
+                    <a asp-controller="Order" asp-action="Invoice" asp-route-id="@Model.OrderHeader.Id" class="btn btn-outline-dark" target="_blank">
+                        <i class="bi bi-printer"></i> @Localizer["Invoice"]
+                    </a>
                     <a asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> @Localizer["AllOrders"]
                     </a>

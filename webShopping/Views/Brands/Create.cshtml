@@ -1,0 +1,19 @@
+@model webShopping.Models.Brand?
+@{
+    ViewData["Title"] = Localizer["Create"] + " " + Localizer["Brands"];
+    var isEdit = Model?.Id > 0;
+}
+<div class="section-title mb-3">@(isEdit ? Localizer["Edit"] : Localizer["Create"]) @Localizer["Brands"]</div>
+<div class="global-card p-4 col-lg-7">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" asp-for="Id" /> }
+        <div class="mb-3"><label class="form-label">Name EN</label><input asp-for="Name" class="form-control" required /></div>
+        <div class="mb-3"><label class="form-label">Name AR</label><input asp-for="NameAr" class="form-control" dir="rtl" /></div>
+        <div class="mb-3"><label class="form-label">@Localizer["SortBy"]</label><input asp-for="SortOrder" class="form-control" type="number" /></div>
+        <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label class="form-check-label" asp-for="IsActive">Active</label></div>
+        <div class="mb-3"><label class="form-label">Image</label><input type="file" name="Image" class="form-control" accept="image/*" /></div>
+        <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+    </form>
+</div>

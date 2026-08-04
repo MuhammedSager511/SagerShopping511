@@ -29,7 +29,7 @@
             ["@type"] = "Offer",
             ["priceCurrency"] = "USD",
             ["price"] = product.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-            ["availability"] = product.IsStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            ["availability"] = product.StockQuantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
         }
     };
     if (reviews.Any())
@@ -52,39 +52,45 @@
         <div class="card border-0 shadow-sm global-card">
             <div class="row g-0">
                 <div class="col-md-5">
-                        @if (images.Any())
+                    @{
+                        var gallerySources = new List<string>();
+                        if (!string.IsNullOrEmpty(product.Path))
+                            gallerySources.Add(Url.Content($"~/files/{product.Path}"));
+                        foreach (var img in images)
                         {
-                            <div id="productGallery" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    @for (var i = 0; i < images.Count; i++)
-                                    {
-                                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                                            <img src="~/files/@images[i].Path" class="d-block w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
-                                        </div>
-                                    }
-                                </div>
-                                @if (images.Count > 1)
+                            var src = Url.Content($"~/files/{img.Path}");
+                            if (!gallerySources.Contains(src, StringComparer.OrdinalIgnoreCase))
+                                gallerySources.Add(src);
+                        }
+                        if (gallerySources.Count == 0)
+                            gallerySources.Add(Url.Content("~/images/image/oip.jpg"));
+                    }
+                    <div class="product-gallery" data-product-gallery>
+                        <div class="product-gallery-main">
+                            <img src="@gallerySources[0]" alt="@name" id="productMainImage" loading="eager" />
+                        </div>
+                        @if (gallerySources.Count > 1)
+                        {
+                            <div class="product-gallery-thumbs" role="list">
+                                @for (var i = 0; i < gallerySources.Count; i++)
                                 {
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#productGallery" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#productGallery" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                                    <button type="button"
+                                            class="product-gallery-thumb @(i == 0 ? "is-active" : "")"
+                                            data-src="@gallerySources[i]"
+                                            aria-label="@Localizer["ProductImage"] @(i + 1)">
+                                        <img src="@gallerySources[i]" alt="" loading="lazy" />
+                                    </button>
                                 }
                             </div>
                         }
-                        else if (product.Path == null)
-                        {
-                            <img src="~/images/image/oip.jpg" class="img-fluid rounded-start w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
-                        }
-                        else
-                        {
-                            <img src="~/files/@product.Path" class="img-fluid rounded-start w-100" style="height:380px;object-fit:cover" alt="@name" loading="lazy" />
-                        }
                     </div>
-                    <div class="col-md-7 p-4">
+                </div>
+                    <div class="col-md-7 product-detail-info">
                         @if (product.categoty != null)
                         {
                             <span class="badge bg-secondary mb-2">@LocalizedContent.CategoryName(product.categoty, Localizer)</span>
                         }
-                        <h2 class="fw-bold mb-2">@name</h2>
+                        <h2 class="fw-bold mb-2 product-detail-title">@name</h2>
                         @if (reviews.Any())
                         {
                             <div class="mb-2 text-warning">
@@ -96,57 +102,74 @@
                             </div>
                         }
                         <div class="mb-3">
-                            <span class="stock-badge @(product.IsStock ? "stock-in" : "stock-out")">
-                                @(product.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
+                            <span class="stock-badge @StockHelper.BadgeCss(StockHelper.GetLevel(product))">
+                                @StockHelper.Label(product, Localizer)
                             </span>
                         </div>
                         <p class="text-muted">@desc</p>
-                        <div class="product-price fs-2 mb-1">@Currency.Format(product.Price)</div>
-                        <small class="text-muted d-block mb-4">@Localizer["StoredInUsd"]: $@product.Price.ToString("N2")</small>
+                        <div class="product-price fs-2 mb-1">
+                            @if (PriceHelper.HasDiscount(product))
+                            {
+                                <span class="product-price-old fs-5">@Currency.Format(product.Price)</span>
+                                <span class="badge bg-danger ms-1">-@PriceHelper.DiscountPercent(product)%</span>
+                            }
+                            @Currency.Format(PriceHelper.EffectiveUnitPrice(product))
+                        </div>
+                        <small class="text-muted d-block mb-3">@Localizer["StoredInUsd"]: $@PriceHelper.EffectiveUnitPrice(product).ToString("N2")</small>
 
-                        <div class="row align-items-end g-3 mb-3">
-                            <div class="col-auto">
-                                @if (User.Identity?.IsAuthenticated == true)
+                        @if (!string.IsNullOrWhiteSpace(product.Colors))
+                        {
+                            <div class="mb-2"><strong>@Localizer["Colors"]:</strong>
+                                @foreach (var c in product.Colors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                                 {
-                                    <form method="post" asp-action="Details" asp-route-id="@product.Id" class="d-flex flex-wrap gap-2 align-items-end">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="ProductId" value="@product.Id" />
-                                        <div>
-                                            <label class="form-label fw-semibold">@Localizer["Quantity"]</label>
-                                            <input name="Count" type="number" min="1" value="1" class="form-control" style="width:80px" required />
-                                        </div>
-                                        @if (product.IsStock)
-                                        {
-                                            <button type="submit" class="btn btn-accent px-4 py-2">
-                                                <i class="bi bi-cart-plus"></i> @Localizer["AddToCart"]
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn btn-secondary px-4 py-2" disabled>@Localizer["OutOfStock"]</button>
-                                        }
-                                    </form>
-                                }
-                                else
-                                {
-                                    <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-accent px-4 py-2">
-                                        <i class="bi bi-box-arrow-in-right"></i> @Localizer["SignInToBuy"]
-                                    </a>
+                                    <span class="badge bg-secondary me-1">@c</span>
                                 }
                             </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(product.Sizes))
+                        {
+                            <div class="mb-3"><strong>@Localizer["Sizes"]:</strong>
+                                @foreach (var s in product.Sizes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                {
+                                    <span class="badge bg-light text-dark border me-1">@s</span>
+                                }
+                            </div>
+                        }
+
+                        <div class="product-detail-actions">
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                <div class="col-auto">
-                                    <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="productId" value="@product.Id" />
-                                        <button type="submit" class="btn btn-outline-danger"><i class="bi bi-heart-fill"></i> @Localizer["Wishlist"]</button>
-                                    </form>
-                                </div>
+                                <form method="post" asp-action="Details" asp-route-id="@product.Id" class="product-buy-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="ProductId" value="@product.Id" />
+                                    <div class="product-qty-field">
+                                        <label class="form-label fw-semibold mb-1">@Localizer["Quantity"]</label>
+                                        <input name="Count" type="number" min="1" max="@Math.Max(1, product.StockQuantity)" value="1" class="form-control product-qty-input" required @(product.StockQuantity <= 0 ? "disabled" : null) />
+                                    </div>
+                                    @if (product.StockQuantity > 0)
+                                    {
+                                        <button type="submit" class="btn btn-accent">
+                                            <i class="bi bi-cart-plus"></i> @Localizer["AddToCart"]
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary" disabled>@Localizer["OutOfStock"]</button>
+                                    }
+                                </form>
+                                <form asp-controller="Wishlist" asp-action="Toggle" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@product.Id" />
+                                    <button type="submit" class="btn btn-outline-danger w-100"><i class="bi bi-heart-fill"></i> @Localizer["Wishlist"]</button>
+                                </form>
                             }
-                            <div class="col-auto">
-                                <a asp-action="Shop" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> @Localizer["Shop"]</a>
-                            </div>
+                            else
+                            {
+                                <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-accent">
+                                    <i class="bi bi-box-arrow-in-right"></i> @Localizer["SignInToBuy"]
+                                </a>
+                            }
+                            <a asp-action="Shop" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> @Localizer["Shop"]</a>
                         </div>
                     </div>
                 </div>
@@ -199,6 +222,24 @@
                         <p class="mb-0 mt-1">@review.Comment</p>
                     </div>
                 }
+            </div>
+        }
+
+        @{
+            var similar = ViewBag.Similar as IEnumerable<webShopping.Models.Product> ?? Enumerable.Empty<webShopping.Models.Product>();
+        }
+        @if (similar.Any())
+        {
+            <div class="mt-4">
+                <h5 class="fw-bold mb-3">@Localizer["SimilarProducts"]</h5>
+                <div class="row g-3">
+                    @foreach (var item in similar)
+                    {
+                        <div class="col-6 col-md-3">
+                            <partial name="_ProductCard" model="item" />
+                        </div>
+                    }
+                </div>
             </div>
         }
     </div>

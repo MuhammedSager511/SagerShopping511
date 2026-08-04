@@ -1,0 +1,19 @@
+@inject ISiteContentService Site
+@{
+    var s = Site.Settings;
+    var isAr = Localizer.IsArabic;
+    var name = isAr && !string.IsNullOrWhiteSpace(s.SiteNameAr) ? s.SiteNameAr : (string.IsNullOrWhiteSpace(s.SiteNameEn) ? "Sager" : s.SiteNameEn);
+    var highlight = isAr && !string.IsNullOrWhiteSpace(s.SiteNameHighlightAr) ? s.SiteNameHighlightAr : (string.IsNullOrWhiteSpace(s.SiteNameHighlightEn) ? "Shop" : s.SiteNameHighlightEn);
+    var logo = !string.IsNullOrWhiteSpace(s.LogoPath) ? Url.Content($"~/files/{s.LogoPath}") : Url.Content("~/images/image/logo.png");
+    var full = ThemeHelper.FullSiteName(s, isAr);
+    var size = ViewData["BrandLogoSize"] as string ?? "32";
+    var cssClass = ViewData["BrandClass"] as string ?? "navbar-brand";
+    var showText = ViewData["BrandShowText"] as bool? ?? true;
+}
+<a class="@cssClass" asp-controller="Home" asp-action="Index" title="@full">
+    <img src="@logo" width="@size" height="@size" class="me-1 brand-logo" alt="@full" />
+    @if (showText)
+    {
+        <span class="brand-sager">@name</span><span class="brand-shop">@highlight</span>
+    }
+</a>

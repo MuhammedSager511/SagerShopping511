@@ -1,0 +1,59 @@
+@model webShopping.Models.OrderDetailsVM
+@{
+    Layout = null;
+    var h = Model.OrderHeader;
+    var invoiceBrand = ThemeHelper.FullSiteName(Site.Settings, Localizer.IsArabic);
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@Localizer["Invoice"] #@h.Id</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; color: #111; }
+        h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1.25rem; }
+        th, td { border-bottom: 1px solid #ddd; padding: .55rem .4rem; text-align: start; }
+        th { background: #f5f5f7; }
+        .muted { color: #666; font-size: .9rem; }
+        .total { font-weight: 800; font-size: 1.1rem; }
+        @@media print { .no-print { display: none; } body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <button class="no-print" onclick="window.print()">@Localizer["Invoice"]</button>
+    <h1>@invoiceBrand — @Localizer["Invoice"] #@h.Id</h1>
+    <p class="muted">@h.orderDate.ToString("g") · @h.orderStatus</p>
+    <p>
+        <strong>@h.Name @h.LastName</strong><br />
+        @h.PhoneNumber<br />
+        @h.Addres · @h.sehir · @h.Country
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>@Localizer["Name"]</th>
+                <th>@Localizer["Count"]</th>
+                <th>@Localizer["Price"]</th>
+                <th>@Localizer["Total"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.orderDetails)
+            {
+                <tr>
+                    <td>@(item.product != null ? LocalizedContent.ProductName(item.product, Localizer) : item.productId)</td>
+                    <td>@item.count</td>
+                    <td>@item.Price.ToString("N2")</td>
+                    <td>@((item.Price * item.count).ToString("N2"))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="total">@Localizer["Total"]: @h.orderTotal.ToString("N2") USD</p>
+    @if (h.DiscountUsd > 0)
+    {
+        <p class="muted">@Localizer["Discount"]: @h.DiscountUsd.ToString("N2") · @h.CouponCode</p>
+    }
+</body>
+</html>

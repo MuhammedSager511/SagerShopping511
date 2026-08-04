@@ -2,7 +2,10 @@ User-agent: *
 Allow: /
 Disallow: /Admin/
 Disallow: /Identity/
-Disallow: /Cart/Summary
+Disallow: /Cart/
 Disallow: /Order/
+Disallow: /Notifications/
+Disallow: /Profile/
+Disallow: /Wishlist/
 
 Sitemap: /sitemap.xml

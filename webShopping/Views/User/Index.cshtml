@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = Localizer["Users"];
+    bool IsLocked(ApplicationUser u) =>
+        u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -16,24 +18,61 @@
         <table class="table table-hover mb-0" id="myTable">
             <thead class="table-dark">
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th>@Localizer["Name"]</th>
+                    <th>@Localizer["Email"]</th>
+                    <th>@Localizer["Role"]</th>
+                    <th>@Localizer["Status"]</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model)
                 {
-                    <tr>
+                    var locked = IsLocked(item);
+                    <tr class="@(locked ? "table-secondary" : "")">
                         <td>@(item.Name ?? "-") @(item.LastName ?? "")</td>
                         <td>@item.Email</td>
                         <td><span class="badge bg-primary">@(item.Role ?? "User")</span></td>
+                        <td>
+                            @if (locked)
+                            {
+                                <span class="badge bg-danger">@Localizer["Suspended"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@Localizer["Active"]</span>
+                            }
+                        </td>
                         <td class="text-nowrap">
-                            <a asp-action="EditRole" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil"></i>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="@Localizer["Edit"]">
+                                <i class="bi bi-person-lines-fill"></i>
                             </a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">
+                            <a asp-action="EditRole" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="@Localizer["Role"]">
+                                <i class="bi bi-shield"></i>
+                            </a>
+                            @if (locked)
+                            {
+                                <form asp-action="SetActive" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="active" value="true" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="@Localizer["Activate"]">
+                                        <i class="bi bi-unlock"></i>
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="SetActive" method="post" class="d-inline" onsubmit="return confirm('@Localizer["ConfirmSuspend"]');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="active" value="false" />
+                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="@Localizer["Suspend"]">
+                                        <i class="bi bi-lock"></i>
+                                    </button>
+                                </form>
+                            }
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="@Localizer["Delete"]">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>

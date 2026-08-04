@@ -23,12 +23,17 @@ namespace webShopping.Controllers
                 ($"{baseUrl}/Home/Shop", "daily", 0.9),
                 ($"{baseUrl}/Home/About", "monthly", 0.5),
                 ($"{baseUrl}/Home/Terms", "monthly", 0.4),
-                ($"{baseUrl}/Home/Refund", "monthly", 0.4),
+                ($"{baseUrl}/Home/Privacy", "monthly", 0.4),
+                ($"{baseUrl}/Order/Track", "monthly", 0.5),
             };
 
             var products = await _db.Products.Select(p => p.Id).ToListAsync();
             foreach (var id in products)
                 urls.Add(($"{baseUrl}/Home/Details/{id}", "weekly", 0.8));
+
+            var categories = await _db.Categoties.Select(c => c.Id).ToListAsync();
+            foreach (var id in categories)
+                urls.Add(($"{baseUrl}/Home/Shop?categoryId={id}", "weekly", 0.7));
 
             var ns = XNamespace.Get("http://www.sitemaps.org/schemas/sitemap/0.9");
             var doc = new XDocument(

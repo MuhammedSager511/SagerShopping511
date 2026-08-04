@@ -8,48 +8,37 @@ namespace webShopping.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "AppNotifications",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    TitleEn = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TitleAr = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MessageEn = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MessageAr = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LinkUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrderId = table.Column<int>(type: "int", nullable: true),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AppNotifications", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AppNotifications_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AppNotifications_UserId_IsRead",
-                table: "AppNotifications",
-                columns: new[] { "UserId", "IsRead" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AppNotifications_CreatedAt",
-                table: "AppNotifications",
-                column: "CreatedAt");
+            migrationBuilder.Sql("""
+                IF OBJECT_ID(N'[AppNotifications]', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [AppNotifications](
+                        [Id] int NOT NULL IDENTITY(1,1),
+                        [UserId] nvarchar(450) NOT NULL,
+                        [TitleEn] nvarchar(max) NOT NULL,
+                        [TitleAr] nvarchar(max) NOT NULL,
+                        [MessageEn] nvarchar(max) NOT NULL,
+                        [MessageAr] nvarchar(max) NOT NULL,
+                        [LinkUrl] nvarchar(max) NULL,
+                        [Type] nvarchar(max) NOT NULL,
+                        [OrderId] int NULL,
+                        [IsRead] bit NOT NULL,
+                        [CreatedAt] datetime2 NOT NULL,
+                        CONSTRAINT [PK_AppNotifications] PRIMARY KEY ([Id]),
+                        CONSTRAINT [FK_AppNotifications_AspNetUsers_UserId]
+                            FOREIGN KEY ([UserId]) REFERENCES [AspNetUsers] ([Id]) ON DELETE CASCADE
+                    );
+                    CREATE INDEX [IX_AppNotifications_UserId_IsRead] ON [AppNotifications]([UserId], [IsRead]);
+                    CREATE INDEX [IX_AppNotifications_CreatedAt] ON [AppNotifications]([CreatedAt]);
+                END
+                """);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(name: "AppNotifications");
+            migrationBuilder.Sql("""
+                IF OBJECT_ID(N'[AppNotifications]', N'U') IS NOT NULL
+                    DROP TABLE [AppNotifications];
+                """);
         }
     }
 }

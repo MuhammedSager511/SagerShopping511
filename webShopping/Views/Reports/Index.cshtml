@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = Localizer["Reports"];
+    var daily = ViewBag.DailySales as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var monthly = ViewBag.MonthlySales as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var best = ViewBag.BestSellers as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var names = ViewBag.BestSellerProducts as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var lowStock = ViewBag.LowStock as IEnumerable<webShopping.Models.Product> ?? Enumerable.Empty<webShopping.Models.Product>();
+    var customers = ViewBag.TopCustomers as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+    var coupons = ViewBag.Coupons as IEnumerable<webShopping.Models.Coupon> ?? Enumerable.Empty<webShopping.Models.Coupon>();
+    var saleProducts = ViewBag.SaleProducts as IEnumerable<webShopping.Models.Product> ?? Enumerable.Empty<webShopping.Models.Product>();
+}
+<div class="section-title mb-3"><i class="bi bi-graph-up"></i> @Localizer["Reports"]</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="global-card p-3">
+            <div class="text-muted small">@Localizer["Completed"]</div>
+            <div class="fs-3 fw-bold">@ViewBag.CompletedCount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="global-card p-3">
+            <div class="text-muted small">@Localizer["Cancelled"]</div>
+            <div class="fs-3 fw-bold">@ViewBag.CancelledCount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="global-card p-3">
+            <div class="text-muted small">@Localizer["Revenue"]</div>
+            <div class="fs-3 fw-bold">@(((double)ViewBag.Revenue).ToString("N2")) USD</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["DailySales"] (14d)</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Date"]</th><th>@Localizer["Orders"]</th><th>@Localizer["Total"]</th></tr></thead>
+                <tbody>
+                @foreach (var row in daily)
+                {
+                    <tr><td>@(((DateTime)row.Day).ToString("d"))</td><td>@row.Count</td><td>@(((double)row.Total).ToString("N2"))</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["MonthlySales"]</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Month"]</th><th>@Localizer["Orders"]</th><th>@Localizer["Total"]</th></tr></thead>
+                <tbody>
+                @foreach (var row in monthly)
+                {
+                    <tr><td>@row.Year-@row.Month.ToString("00")</td><td>@row.Count</td><td>@(((double)row.Total).ToString("N2"))</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["BestSellers"]</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Products"]</th><th>@Localizer["Sold"]</th><th>@Localizer["Revenue"]</th></tr></thead>
+                <tbody>
+                @foreach (var row in best)
+                {
+                    var pid = (int)row.ProductId;
+                    <tr>
+                        <td>@(names.TryGetValue(pid, out var n) ? n : pid.ToString())</td>
+                        <td>@row.Sold</td>
+                        <td>@(((double)row.Revenue).ToString("N2"))</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["TopCustomers"]</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Name"]</th><th>@Localizer["Orders"]</th><th>@Localizer["Total"]</th></tr></thead>
+                <tbody>
+                @foreach (var row in customers)
+                {
+                    <tr><td>@row.Name</td><td>@row.Orders</td><td>@(((double)row.Total).ToString("N2"))</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["LowStock"]</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Products"]</th><th>@Localizer["Stock"]</th></tr></thead>
+                <tbody>
+                @foreach (var p in lowStock)
+                {
+                    <tr><td>@p.Name</td><td>@p.StockQuantity</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["PromoReports"]</h2>
+            <p class="small text-muted mb-2">
+                @Localizer["OrdersWithCoupon"]: <strong>@ViewBag.CouponOrderCount</strong> ·
+                @Localizer["Discount"]: <strong>@(((double)ViewBag.CouponDiscountTotal).ToString("N2")) USD</strong>
+            </p>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["CouponCode"]</th><th>@Localizer["Uses"]</th><th>@Localizer["Value"]</th></tr></thead>
+                <tbody>
+                @foreach (var c in coupons)
+                {
+                    <tr>
+                        <td><code>@c.Code</code></td>
+                        <td>@c.UsedCount</td>
+                        <td>@(c.IsPercent ? $"{c.Value}%" : $"{c.Value:N2}")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="global-card p-3">
+            <h2 class="h5">@Localizer["OnSale"]</h2>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>@Localizer["Products"]</th><th>@Localizer["Price"]</th><th>@Localizer["SalePrice"]</th></tr></thead>
+                <tbody>
+                @foreach (var p in saleProducts)
+                {
+                    <tr>
+                        <td>@p.Name</td>
+                        <td>@p.Price.ToString("N2")</td>
+                        <td>@p.SalePrice?.ToString("N2")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

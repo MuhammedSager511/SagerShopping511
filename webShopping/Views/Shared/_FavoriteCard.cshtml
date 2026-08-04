@@ -37,7 +37,13 @@
             </h6>
             <p class="favorite-card-desc">@desc</p>
             <div class="d-flex align-items-center justify-content-between mt-auto">
-                <span class="product-price">@Currency.Format(product.Price)</span>
+                <span class="product-price">
+                    @if (PriceHelper.HasDiscount(product))
+                    {
+                        <span class="product-price-old">@Currency.Format(product.Price)</span>
+                    }
+                    @Currency.Format(PriceHelper.EffectiveUnitPrice(product))
+                </span>
                 <span class="stock-badge @(product.IsStock ? "stock-in" : "stock-out")">
                     @(product.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
                 </span>
@@ -49,12 +55,11 @@
             </a>
             @if (product.IsStock)
             {
-                <form asp-controller="Home" asp-action="Details" asp-route-id="@product.Id" method="post" class="d-inline">
+                <form asp-controller="Wishlist" asp-action="MoveToCart" method="post" class="d-inline">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" name="Scart.ProductId" value="@product.Id" />
-                    <input type="hidden" name="Scart.Count" value="1" />
+                    <input type="hidden" name="productId" value="@product.Id" />
                     <button type="submit" class="btn btn-accent btn-sm">
-                        <i class="bi bi-cart-plus"></i> @Localizer["AddToCart"]
+                        <i class="bi bi-cart-plus"></i> @Localizer["MoveToCart"]
                     </button>
                 </form>
             }

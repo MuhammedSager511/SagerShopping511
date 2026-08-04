@@ -1,0 +1,27 @@
+@model IEnumerable<webShopping.Models.FaqItem>
+@inject ISiteContentService Site
+@{
+    ViewData["Title"] = Localizer["Faqs"];
+}
+<div class="section-title mb-3"><i class="bi bi-question-circle"></i> @Localizer["Faqs"]</div>
+<div class="accordion" id="faqAccordion">
+    @{ var i = 0; }
+    @foreach (var item in Model)
+    {
+        <div class="accordion-item global-card mb-2 border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#faq@i">
+                    @Site.T(item.QuestionEn, item.QuestionAr)
+                </button>
+            </h2>
+            <div id="faq@i" class="accordion-collapse collapse @(i == 0 ? "show" : "")" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">@Site.T(item.AnswerEn, item.AnswerAr)</div>
+            </div>
+        </div>
+        i++;
+    }
+</div>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">@Localizer["NoProducts"]</div>
+}

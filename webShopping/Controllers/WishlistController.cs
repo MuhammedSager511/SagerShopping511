@@ -51,8 +51,39 @@ namespace webShopping.Controllers
                 _db.WishlistItems.Add(new WishlistItem { UserId = userId, ProductId = productId });
                 _toast.AddSuccessToastMessage(_localizer["ToastWishlistAdded"]);
             }
+
             await _db.SaveChangesAsync();
-            return Redirect(returnUrl ?? Url.Action("Details", "Home", new { id = productId })!);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+            return RedirectToAction("Details", "Home", new { id = productId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MoveToCart(int productId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var product = await _db.Products.FindAsync(productId);
+            if (product == null || product.StockQuantity <= 0)
+            {
+                _toast.AddErrorToastMessage(_localizer["ToastProductUnavailable"]);
+                return RedirectToAction(nameof(Index));
+            }
+
+            var cart = await _db.ShoppingCarts.FirstOrDefaultAsync(c => c.ApplicationUserId == userId && c.ProductId == productId);
+            if (cart == null)
+                _db.ShoppingCarts.Add(new ShoppingCart { ApplicationUserId = userId, ProductId = productId, Count = 1 });
+            else if (cart.Count < product.StockQuantity)
+                cart.Count += 1;
+
+            var wish = await _db.WishlistItems.FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == productId);
+            if (wish != null) _db.WishlistItems.Remove(wish);
+
+            await _db.SaveChangesAsync();
+            var count = await _db.ShoppingCarts.CountAsync(i => i.ApplicationUserId == userId);
+            HttpContext.Session.SetInt32(Diger.ssShoppingCart, count);
+            _toast.AddSuccessToastMessage(_localizer["ToastProductAdded"]);
+            return RedirectToAction("Index", "Cart");
         }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using webShopping.Data;
 using webShopping.Models;
+using webShopping.Services;
 
 namespace webShopping.Data
 {
@@ -64,6 +65,51 @@ namespace webShopping.Data
                     new QuickLink { TitleEn = "About Us", TitleAr = "من نحن", Url = "/Home/About", SortOrder = 5 }
                 );
                 await db.SaveChangesAsync();
+            }
+
+            try
+            {
+                if (!db.BankAccounts.Any())
+                {
+                    db.BankAccounts.AddRange(
+                        new BankAccount
+                        {
+                            BankNameEn = "Sham Bank (Cash)",
+                            BankNameAr = "بنك الشام (كاش)",
+                            AccountNumber = "0000000000",
+                            BeneficiaryEn = "SagerShop",
+                            BeneficiaryAr = "SagerShop",
+                            NotesEn = "Include your order number in the transfer reference.",
+                            NotesAr = "يرجى ذكر رقم الطلب في ملاحظات التحويل.",
+                            SortOrder = 1,
+                            IsActive = true
+                        },
+                        new BankAccount
+                        {
+                            BankNameEn = "BEMO Bank",
+                            BankNameAr = "بنك بيمو",
+                            AccountNumber = "0000000000",
+                            Iban = "SY0000000000000000000000",
+                            BeneficiaryEn = "SagerShop",
+                            BeneficiaryAr = "SagerShop",
+                            SortOrder = 2,
+                            IsActive = true
+                        });
+                    await db.SaveChangesAsync();
+
+                    var settings = await db.SiteSettings.OrderBy(s => s.Id).FirstOrDefaultAsync();
+                    if (settings != null)
+                    {
+                        var accounts = await db.BankAccounts.OrderBy(b => b.SortOrder).ToListAsync();
+                        settings.BankTransferInfoEn = LocalizedContent.FormatBankAccounts(accounts, arabic: false);
+                        settings.BankTransferInfoAr = LocalizedContent.FormatBankAccounts(accounts, arabic: true);
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch
+            {
+                // Table may not exist yet on first boot before schema self-heal.
             }
 
             if (!db.Categoties.Any())
@@ -136,10 +182,10 @@ namespace webShopping.Data
             }
             else
             {
-                var adminUser = await userManager.FindByEmailAsync(email);
+                ApplicationUser? adminUser = await userManager.FindByEmailAsync(email);
                 if (adminUser == null)
                 {
-                    var user = new ApplicationUser
+                    adminUser = new ApplicationUser
                     {
                         UserName = email,
                         Email = email,
@@ -149,16 +195,23 @@ namespace webShopping.Data
                         PhoneNumberConfirmed = true
                     };
 
-                    var result = await userManager.CreateAsync(user, password);
+                    var result = await userManager.CreateAsync(adminUser, password);
                     if (result.Succeeded)
-                        await userManager.AddToRoleAsync(user, Diger.Role_Admin);
+                        await userManager.AddToRoleAsync(adminUser, Diger.Role_Admin);
+                    else
+                    {
+                        var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger("DbInitializer");
+                        logger?.LogWarning("Admin seed failed: {Errors}",
+                            string.Join(", ", result.Errors.Select(e => e.Description)));
+                        adminUser = null;
+                    }
                 }
                 else if (!await userManager.IsInRoleAsync(adminUser, Diger.Role_Admin))
                 {
                     await userManager.AddToRoleAsync(adminUser, Diger.Role_Admin);
                 }
 
-                if (configuration.GetValue<bool>("AdminSeed:ResetPassword"))
+                if (adminUser != null && configuration.GetValue<bool>("AdminSeed:ResetPassword"))
                 {
                     var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
                     var reset = await userManager.ResetPasswordAsync(adminUser, token, password);

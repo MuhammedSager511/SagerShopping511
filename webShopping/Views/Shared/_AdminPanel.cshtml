@@ -9,12 +9,16 @@
         <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center">
             <div class="lang-toggle">
                 <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="en" asp-route-returnUrl="@returnUrl"
-                   class="lang-btn @(isAr ? "" : "active")" title="English">
+                   class="lang-btn @(Localizer.CurrentLanguage == "en" ? "active" : "")" title="English">
                     <img src="~/images/flags/gb.svg" alt="English" class="flag-icon" />
                 </a>
                 <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="ar" asp-route-returnUrl="@returnUrl"
-                   class="lang-btn @(isAr ? "active" : "")" title="العربية">
+                   class="lang-btn @(Localizer.CurrentLanguage == "ar" ? "active" : "")" title="العربية">
                     <img src="~/images/flags/sy.svg" alt="العربية" class="flag-icon" />
+                </a>
+                <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="tr" asp-route-returnUrl="@returnUrl"
+                   class="lang-btn @(Localizer.CurrentLanguage == "tr" ? "active" : "")" title="Türkçe">
+                    <img src="~/images/flags/tr.svg" alt="Türkçe" class="flag-icon" />
                 </a>
             </div>
             <form asp-controller="Culture" asp-action="SetCurrency" method="post" class="d-flex align-items-center gap-2">
@@ -47,8 +51,15 @@
                 <li class="nav-item"><a class="nav-link" asp-controller="SiteSettings" asp-action="Index"><i class="bi bi-gear"></i> @Localizer["SiteSettings"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="Categoties" asp-action="Index"><i class="bi bi-folder"></i> @Localizer["Categories"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="Products" asp-action="Index"><i class="bi bi-box-seam"></i> @Localizer["Products"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Brands" asp-action="Index"><i class="bi bi-award"></i> @Localizer["Brands"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Banners" asp-action="Index"><i class="bi bi-images"></i> @Localizer["Banners"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Coupons" asp-action="Index"><i class="bi bi-ticket-perforated"></i> @Localizer["Coupons"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Faqs" asp-action="Index"><i class="bi bi-question-circle"></i> @Localizer["Faqs"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Messages" asp-action="Index"><i class="bi bi-envelope"></i> @Localizer["Messages"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Newsletter" asp-action="Index"><i class="bi bi-mailbox"></i> @Localizer["Newsletter"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="User" asp-action="Index"><i class="bi bi-people"></i> @Localizer["Users"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="Order" asp-action="Index"><i class="bi bi-basket"></i> @Localizer["Orders"]</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Reports" asp-action="Index"><i class="bi bi-graph-up"></i> @Localizer["Reports"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="Reviews" asp-action="Index"><i class="bi bi-star"></i> @Localizer["ReviewsAdmin"]</a></li>
                 <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Shop"><i class="bi bi-shop"></i> @Localizer["Shop"]</a></li>
             </ul>

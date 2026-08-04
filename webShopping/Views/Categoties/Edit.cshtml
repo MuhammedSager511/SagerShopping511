@@ -7,7 +7,7 @@
     <div class="col-lg-6">
         <div class="global-card p-4">
             <h4 class="fw-bold mb-3">@Localizer["Edit"] @Localizer["Categories"]</h4>
-            <form asp-action="Edit" method="post">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="Id" />
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="mb-3">
@@ -18,6 +18,25 @@
                 <div class="mb-3">
                     <label asp-for="NameAr" class="form-label">@Localizer["NameAr"]</label>
                     <input asp-for="NameAr" class="form-control" dir="rtl" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="SortOrder" class="form-label">@Localizer["SortBy"]</label>
+                    <input asp-for="SortOrder" class="form-control" type="number" />
+                    <div class="form-text">@Localizer["SortOrderHint"]</div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Image" class="form-label">@Localizer["CategoryImage"]</label>
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <div class="mb-2">
+                            <img src="~/files/@Model.ImagePath" alt="@Model.Name"
+                                 class="category-edit-preview rounded-circle" width="88" height="88"
+                                 style="object-fit:cover;" />
+                        </div>
+                    }
+                    <input asp-for="Image" type="file" accept="image/*" class="form-control" />
+                    <div class="form-text">@Localizer["CategoryImageHint"]</div>
+                    <span asp-validation-for="Image" class="text-danger"></span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>

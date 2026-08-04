@@ -14,6 +14,7 @@ namespace webShopping.Services
         private readonly IWebHostEnvironment _env;
         private const int MaxWidth = 1200;
         private const int JpegQuality = 82;
+        private const long MaxBytes = 5 * 1024 * 1024; // 5 MB
         private static readonly HashSet<string> AllowedExt =
             new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
 
@@ -24,14 +25,17 @@ namespace webShopping.Services
             if (file == null || file.Length == 0)
                 throw new InvalidOperationException("Empty image file.");
 
-            var fileName = $"{prefix}_{Guid.NewGuid():N}.jpg";
-            var dir = GetUploadDirectory();
-            Directory.CreateDirectory(dir);
-            var fullPath = Path.Combine(dir, fileName);
+            if (file.Length > MaxBytes)
+                throw new InvalidOperationException("Image is too large. Maximum size is 5 MB.");
 
             var ext = Path.GetExtension(file.FileName);
             if (!string.IsNullOrEmpty(ext) && !AllowedExt.Contains(ext))
                 throw new InvalidOperationException($"Unsupported image type: {ext}");
+
+            var fileName = $"{prefix}_{Guid.NewGuid():N}.jpg";
+            var dir = GetUploadDirectory();
+            Directory.CreateDirectory(dir);
+            var fullPath = Path.Combine(dir, fileName);
 
             try
             {
@@ -53,10 +57,7 @@ namespace webShopping.Services
             }
             catch (Exception ex) when (ex is not InvalidOperationException)
             {
-                // Fallback: store original bytes if ImageSharp cannot process the file.
-                await using var input = file.OpenReadStream();
-                await using var output = File.Create(fullPath);
-                await input.CopyToAsync(output);
+                throw new InvalidOperationException("Could not process image. Use a valid JPG, PNG, WEBP, or GIF.", ex);
             }
 
             return (fileName, "image/jpeg");

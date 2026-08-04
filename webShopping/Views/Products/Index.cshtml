@@ -32,11 +32,11 @@
                 <td style="text-align: left;">
                     @if (item.Path == null)
                     {
-                        <img src="~/images/image/oip.jpg" width="100px" height="80px" />
+                        <img src="~/images/image/oip.jpg" width="72" height="72" style="object-fit:contain;background:#f4f5f9;border-radius:8px;padding:4px" alt="" />
                     }
                     else
                     {
-                        <img src="~/files/@item.Path" width="100px" height="80px" />
+                        <img src="~/files/@item.Path" width="72" height="72" style="object-fit:contain;background:#f4f5f9;border-radius:8px;padding:4px" alt="" />
                     }
                 </td>
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
@@ -56,13 +56,23 @@
                     }
                 </td>
                 <td>
-                    @if (item.IsStock)
+                    @{
+                        var level = StockHelper.GetLevel(item);
+                    }
+                    @if (level == StockLevel.OutOfStock)
                     {
-                        <span class="badge bg-success">@Localizer["Yes"]</span>
+                        <span class="badge bg-danger">@Localizer["OutOfStock"]</span>
+                        <small class="d-block text-muted">0</small>
+                    }
+                    else if (level == StockLevel.Limited)
+                    {
+                        <span class="badge bg-warning text-dark">@Localizer["LimitedStock"]</span>
+                        <small class="d-block fw-semibold">@item.StockQuantity</small>
                     }
                     else
                     {
-                        <span class="badge bg-danger">@Localizer["No"]</span>
+                        <span class="badge bg-success">@Localizer["InStock"]</span>
+                        <small class="d-block fw-semibold">@item.StockQuantity</small>
                     }
                 </td>
                 <td>@Html.DisplayFor(modelItem => item.categoty.Name)</td>

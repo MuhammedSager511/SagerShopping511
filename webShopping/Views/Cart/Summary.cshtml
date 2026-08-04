@@ -1,6 +1,6 @@
 @model webShopping.Models.ShoppingCartVM
 @{
-    var bankInfo = LocalizedContent.BankTransferInfo(Site.Settings, Localizer);
+    var bankInfo = LocalizedContent.BankTransferInfo(Site, Localizer);
 }
 
 @{
@@ -14,8 +14,9 @@
 
 <div class="section-title mb-4"><i class="bi bi-bag-check"></i> @Localizer["Checkout"]</div>
 
-<form method="post">
+<form method="post" id="checkoutForm">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="orderSubmitToken" value="@ViewBag.OrderSubmitToken" />
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="global-card p-4">
@@ -76,36 +77,63 @@
         </div>
 
         <div class="col-lg-5">
-            <div class="global-card sticky-top" style="top:1rem">
+            <div class="global-card checkout-summary">
                 <div class="card-header bg-white fw-bold border-0 pt-3 px-3">@Localizer["OrderSummary"]</div>
                 <ul class="list-group list-group-flush">
                     @foreach (var item in Model.ListCart)
                     {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>@LocalizedContent.ProductName(item.Product, Localizer) <small class="text-muted">x@(item.Count)</small></span>
-                            <strong>@Currency.Format(item.Count * item.Product.Price)</strong>
+                        <li class="list-group-item checkout-line">
+                            <span class="checkout-line-name">@LocalizedContent.ProductName(item.Product, Localizer) <small class="text-muted">x@(item.Count)</small></span>
+                            <strong class="checkout-line-price">@Currency.Format(item.Count * PriceHelper.EffectiveUnitPrice(item.Product))</strong>
                         </li>
                     }
-                    <li class="list-group-item d-flex justify-content-between">
+                    <li class="list-group-item checkout-line">
                         <span>@Localizer["Subtotal"]</span>
                         <span id="quoteSubtotal">@Currency.Format(ViewBag.SubtotalUsd ?? Model.OrderHeader.SubtotalUsd)</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between">
+                    @{
+                        var discountUsd = (double)(ViewBag.DiscountUsd ?? Model.OrderHeader.DiscountUsd);
+                        var couponCode = ViewBag.CouponCode as string ?? Model.OrderHeader.CouponCode;
+                    }
+                    @if (discountUsd > 0)
+                    {
+                        <li class="list-group-item checkout-line text-success">
+                            <span>@Localizer["Discount"]@(string.IsNullOrEmpty(couponCode) ? "" : $" ({couponCode})")</span>
+                            <span id="quoteDiscount">-@Currency.Format(discountUsd)</span>
+                        </li>
+                    }
+                    <li class="list-group-item checkout-line">
                         <span>@Localizer["Shipping"]</span>
                         @{
                             var shipCost = ViewBag.ShippingUsd ?? Model.OrderHeader.ShippingUsd;
                         }
                         <span id="quoteShipping">@(shipCost <= 0 ? Localizer["FreeShipping"] : Currency.Format(shipCost))</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between">
+                    <li class="list-group-item checkout-line">
                         <span>@Localizer["Vat"]</span>
                         <span id="quoteVat">@Currency.Format(ViewBag.VatUsd ?? Model.OrderHeader.VatUsd)</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between bg-light fw-bold fs-5">
+                    <li class="list-group-item checkout-line checkout-line-total bg-light fw-bold fs-5">
                         <span>@Localizer["Total"] (@Currency.CurrentCurrency)</span>
                         <span class="text-danger" id="quoteTotal">@Currency.Format(Model.OrderHeader.orderTotal)</span>
                     </li>
                 </ul>
+                <div class="px-3 pt-3 border-top">
+                    @if (string.IsNullOrEmpty(couponCode))
+                    {
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="text" name="code" form="applyCouponForm" class="form-control form-control-sm" placeholder="@Localizer["CouponCode"]" maxlength="40" required />
+                            <button type="submit" form="applyCouponForm" class="btn btn-outline-secondary btn-sm text-nowrap">@Localizer["ApplyCoupon"]</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2 small">
+                            <span class="text-success"><i class="bi bi-ticket-perforated"></i> @couponCode</span>
+                            <button type="submit" form="removeCouponForm" class="btn btn-link btn-sm text-danger p-0">@Localizer["Remove"]</button>
+                        </div>
+                    }
+                </div>
                 <div class="p-3 border-top">
                     <small class="text-muted d-block mb-2">
                         <i class="bi bi-truck"></i> @Localizer["DeliveryEstimate"]:
@@ -124,7 +152,7 @@
                         </label>
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-accent btn-lg">
+                        <button type="submit" class="btn btn-accent btn-lg" id="placeOrderBtn">
                             <i class="bi bi-bag-check"></i> @Localizer["PlaceOrder"]
                         </button>
                         <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cart"]</a>
@@ -135,10 +163,26 @@
     </div>
 </form>
 
+<form id="applyCouponForm" asp-action="ApplyCoupon" method="post" class="d-none" data-no-loader>
+    @Html.AntiForgeryToken()
+</form>
+<form id="removeCouponForm" asp-action="RemoveCoupon" method="post" class="d-none" data-no-loader>
+    @Html.AntiForgeryToken()
+</form>
+
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
         (function () {
+            const form = document.getElementById('checkoutForm');
+            const placeBtn = document.getElementById('placeOrderBtn');
+            if (form && placeBtn) {
+                form.addEventListener('submit', function () {
+                    placeBtn.disabled = true;
+                    placeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                });
+            }
+
             const countryEl = document.getElementById('checkoutCountry');
             const cityEl = document.getElementById('checkoutCity');
             if (!countryEl || !cityEl) return;

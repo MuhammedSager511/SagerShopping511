@@ -6,6 +6,7 @@ namespace webShopping.Services
     {
         SiteSettings Settings { get; }
         IReadOnlyList<QuickLink> QuickLinks { get; }
+        IReadOnlyList<BankAccount> BankAccounts { get; }
         string T(string en, string ar);
         void Refresh();
     }

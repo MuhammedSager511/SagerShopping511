@@ -10,25 +10,88 @@
     int currentPage = ViewData["CurrentPage"] != null ? (int)ViewData["CurrentPage"] : 1;
     var sort = ViewData["Sort"]?.ToString() ?? "newest";
     var q = ViewData["Query"]?.ToString();
+    var brands = ViewBag.Brands as IEnumerable<Brand> ?? Enumerable.Empty<Brand>();
+    var brandId = ViewBag.BrandId as int?;
+    var minPrice = ViewData["MinPrice"];
+    var maxPrice = ViewData["MaxPrice"];
+    var inStock = ViewData["InStock"] as bool?;
+    var onSale = ViewData["OnSale"] as bool?;
+    var productCount = Model?.Count() ?? 0;
 }
 
 <div class="row g-4">
     @await Component.InvokeAsync("CategoryList")
 
     <div class="col-md-9">
-        <div class="shop-toolbar">
-            <span class="fw-bold"><i class="bi bi-grid"></i> @Localizer["Shop"]</span>
-            <form asp-action="Shop" method="get" class="d-flex align-items-center gap-2 ms-auto flex-wrap">
+        <div class="shop-filter-panel">
+            <div class="shop-filter-head">
+                <div>
+                    <h1 class="shop-filter-title"><i class="bi bi-grid"></i> @Localizer["Shop"]</h1>
+                    <p class="shop-filter-meta">@productCount @Localizer["Products"]</p>
+                </div>
+            </div>
+
+            <form asp-action="Shop" method="get" class="shop-filter-form" data-no-loader>
                 <input type="hidden" name="categoryId" value="@ViewBag.KategoryId" />
-                <input type="text" name="q" value="@q" class="form-control form-control-sm" style="width:180px" placeholder="@Localizer["SearchPlaceholder"]" />
-                <select name="sort" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
-                    <option value="newest" selected="@(sort == "newest")">@Localizer["SortBy"]</option>
-                    <option value="price_asc" selected="@(sort == "price_asc")">@Localizer["PriceLowHigh"]</option>
-                    <option value="price_desc" selected="@(sort == "price_desc")">@Localizer["PriceHighLow"]</option>
-                    <option value="name" selected="@(sort == "name")">@Localizer["NameAZ"]</option>
-                </select>
-                <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-search"></i></button>
+
+                <div class="shop-filter-search-row">
+                    <div class="shop-filter-field shop-filter-field--search">
+                        <label class="shop-filter-label" for="shopSearchInput">@Localizer["Search"]</label>
+                        <input type="text" name="q" value="@q" class="form-control" placeholder="@Localizer["SearchPlaceholder"]" autocomplete="off" id="shopSearchInput" />
+                    </div>
+                </div>
+
+                <div class="shop-filter-grid">
+                    <div class="shop-filter-field">
+                        <label class="shop-filter-label" for="filterBrand">@Localizer["Brands"]</label>
+                        <select name="brandId" id="filterBrand" class="form-select">
+                            <option value="">@Localizer["AllProducts"]</option>
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id" selected="@(brandId == b.Id)">@(Localizer.IsArabic && !string.IsNullOrWhiteSpace(b.NameAr) ? b.NameAr : b.Name)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="shop-filter-field">
+                        <label class="shop-filter-label" for="filterSort">@Localizer["SortBy"]</label>
+                        <select name="sort" id="filterSort" class="form-select">
+                            <option value="newest" selected="@(sort == "newest")">@Localizer["Newest"]</option>
+                            <option value="price_asc" selected="@(sort == "price_asc")">@Localizer["PriceLowHigh"]</option>
+                            <option value="price_desc" selected="@(sort == "price_desc")">@Localizer["PriceHighLow"]</option>
+                            <option value="name" selected="@(sort == "name")">@Localizer["NameAZ"]</option>
+                            <option value="discount" selected="@(sort == "discount")">@Localizer["Discount"]</option>
+                        </select>
+                    </div>
+                    <div class="shop-filter-field">
+                        <label class="shop-filter-label" for="filterMin">@Localizer["MinPrice"]</label>
+                        <input type="number" step="0.01" name="minPrice" id="filterMin" value="@minPrice" class="form-control" placeholder="0" />
+                    </div>
+                    <div class="shop-filter-field">
+                        <label class="shop-filter-label" for="filterMax">@Localizer["MaxPrice"]</label>
+                        <input type="number" step="0.01" name="maxPrice" id="filterMax" value="@maxPrice" class="form-control" placeholder="—" />
+                    </div>
+                </div>
+
+                <div class="shop-filter-actions">
+                    <div class="shop-filter-checks">
+                        <label class="shop-check">
+                            <input type="checkbox" name="inStock" value="true" class="form-check-input" @(inStock == true ? "checked" : null) />
+                            <span>@Localizer["InStockOnly"]</span>
+                        </label>
+                        <label class="shop-check">
+                            <input type="checkbox" name="onSale" value="true" class="form-check-input" @(onSale == true ? "checked" : null) />
+                            <span>@Localizer["OnSale"]</span>
+                        </label>
+                    </div>
+                    <div class="shop-filter-buttons">
+                        <a asp-action="Shop" class="btn btn-outline-secondary btn-sm">@Localizer["Cancel"]</a>
+                        <button type="submit" class="btn btn-accent btn-sm">
+                            <i class="bi bi-funnel"></i> @Localizer["Search"]
+                        </button>
+                    </div>
+                </div>
             </form>
+            <div id="searchSuggest" class="search-suggest d-none"></div>
         </div>
 
         <div class="row g-4">
@@ -48,20 +111,12 @@
         @if (totalPages > 1)
         {
             <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    @if (currentPage > 1)
-                    {
-                        <li class="page-item"><a class="page-link" href="?page=@(currentPage-1)&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">&laquo;</a></li>
-                    }
+                <ul class="pagination justify-content-center flex-wrap">
                     @for (int i = 1; i <= totalPages; i++)
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" href="?page=@i&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">@i</a>
+                            <a class="page-link" href="?page=@i&sort=@sort&categoryId=@ViewBag.KategoryId&brandId=@brandId&q=@q&minPrice=@minPrice&maxPrice=@maxPrice&inStock=@(inStock == true)&onSale=@(onSale == true)">@i</a>
                         </li>
-                    }
-                    @if (currentPage < totalPages)
-                    {
-                        <li class="page-item"><a class="page-link" href="?page=@(currentPage+1)&sort=@sort&categoryId=@ViewBag.KategoryId&q=@q">&raquo;</a></li>
                     }
                 </ul>
             </nav>

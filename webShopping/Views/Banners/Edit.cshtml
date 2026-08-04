@@ -1,0 +1,5 @@
+@model webShopping.Models.Banner
+@{
+    ViewData["Title"] = Localizer["Edit"] + " " + Localizer["Banners"];
+}
+@await Html.PartialAsync("Create", Model)

@@ -3,10 +3,16 @@
 @{
     var name = LocalizedContent.ProductName(Model, Localizer);
     var desc = LocalizedContent.ProductDescription(Model, Localizer);
+    var unit = PriceHelper.EffectiveUnitPrice(Model);
+    var onSale = PriceHelper.HasDiscount(Model);
 }
 
 <div class="product-card">
-    <a asp-controller="Home" asp-action="Details" asp-route-id="@Model.Id">
+    <a asp-controller="Home" asp-action="Details" asp-route-id="@Model.Id" class="product-card-img-wrap">
+        @if (onSale)
+        {
+            <span class="product-sale-badge">-@PriceHelper.DiscountPercent(Model)%</span>
+        }
         @if (Model.Path == null)
         {
             <img src="~/images/image/oip.jpg" class="product-card-img" alt="@name" loading="lazy" />
@@ -23,12 +29,18 @@
             <small class="text-muted mb-1">@LocalizedContent.CategoryName(Model.categoty, Localizer)</small>
         }
         <p class="product-card-desc">@desc</p>
-        <span class="stock-badge @(Model.IsStock ? "stock-in" : "stock-out")">
-            @(Model.IsStock ? Localizer["InStock"] : Localizer["OutOfStock"])
+        <span class="stock-badge @StockHelper.BadgeCss(StockHelper.GetLevel(Model))">
+            @StockHelper.Label(Model, Localizer)
         </span>
     </div>
     <div class="product-card-footer">
-        <span class="product-price">@Currency.Format(Model.Price)</span>
+        <span class="product-price">
+            @if (onSale)
+            {
+                <span class="product-price-old">@Currency.Format(Model.Price)</span>
+            }
+            @Currency.Format(unit)
+        </span>
         <a asp-controller="Home" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-accent btn-sm">
             <i class="bi bi-eye"></i> @Localizer["Details"]
         </a>

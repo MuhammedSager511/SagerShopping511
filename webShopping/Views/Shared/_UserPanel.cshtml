@@ -6,17 +6,31 @@
 {
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
     var isAr = Localizer.IsArabic;
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var cartCount = isAuth
+        ? (HttpContextAccessor.HttpContext?.Session.GetInt32(Diger.ssShoppingCart) ?? 0)
+        : 0;
+    var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLowerInvariant();
+    var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLowerInvariant();
+    bool IsHome() => ctrl == "home" && (act == "index" || string.IsNullOrEmpty(act));
+    bool IsShop() => ctrl == "home" && (act == "shop" || act == "search" || act == "details" || act == "categorydetails");
+    bool IsCart() => ctrl == "cart";
+    bool IsMenuArea() => !IsHome() && !IsShop() && !IsCart();
 
-    <div class="lang-currency-bar">
+    <div class="lang-currency-bar d-none d-lg-block">
         <div class="container-fluid px-lg-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="lang-toggle">
                 <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="en" asp-route-returnUrl="@returnUrl"
-                   class="lang-btn @(isAr ? "" : "active")" title="English">
+                   class="lang-btn @(Localizer.CurrentLanguage == "en" ? "active" : "")" title="English">
                     <img src="~/images/flags/gb.svg" alt="English" class="flag-icon" />
                 </a>
                 <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="ar" asp-route-returnUrl="@returnUrl"
-                   class="lang-btn @(isAr ? "active" : "")" title="العربية">
+                   class="lang-btn @(Localizer.CurrentLanguage == "ar" ? "active" : "")" title="العربية">
                     <img src="~/images/flags/sy.svg" alt="العربية" class="flag-icon" />
+                </a>
+                <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="tr" asp-route-returnUrl="@returnUrl"
+                   class="lang-btn @(Localizer.CurrentLanguage == "tr" ? "active" : "")" title="Türkçe">
+                    <img src="~/images/flags/tr.svg" alt="Türkçe" class="flag-icon" />
                 </a>
             </div>
             <form asp-controller="Culture" asp-action="SetCurrency" method="post" class="d-flex align-items-center gap-2">
@@ -48,19 +62,26 @@
 
     <nav class="store-navbar navbar navbar-expand-lg">
         <div class="container-fluid px-lg-4">
-            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                <img src="~/images/image/logo.png" width="32" height="32" class="me-1" alt="Logo" />
-                <span class="brand-sager">Sager</span><span class="brand-shop">Shop</span>
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                    aria-controls="mainNav" aria-expanded="false" aria-label="@Localizer["Menu"]">
-                <i class="bi bi-list text-white fs-4"></i>
-            </button>
-            <div class="collapse navbar-collapse" id="mainNav">
+            @await Html.PartialAsync("_Brand")
+
+            <div class="store-navbar-mobile-actions d-flex d-lg-none align-items-center gap-1">
+                @if (isAuth)
+                {
+                    <a asp-controller="Notifications" asp-action="Index" class="navbar-icon-btn" title="@Localizer["Notifications"]">
+                        <i class="bi bi-bell"></i>
+                    </a>
+                }
+                <button class="navbar-icon-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#storeSideMenu"
+                        aria-controls="storeSideMenu" aria-label="@Localizer["Menu"]">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+
+            <div class="collapse navbar-collapse d-none d-lg-flex" id="mainNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @Localizer["Home"]</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Shop"><i class="bi bi-shop"></i> @Localizer["Shop"]</a></li>
-                    @if (User.Identity?.IsAuthenticated == true)
+                    <li class="nav-item"><a class="nav-link @(IsHome() ? "active" : "")" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @Localizer["Home"]</a></li>
+                    <li class="nav-item"><a class="nav-link @(IsShop() ? "active" : "")" asp-controller="Home" asp-action="Shop"><i class="bi bi-shop"></i> @Localizer["Shop"]</a></li>
+                    @if (isAuth)
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Order" asp-action="Index"><i class="bi bi-bag-check"></i> @Localizer["Orders"]</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart"></i> @Localizer["Wishlist"]</a></li>
@@ -76,16 +97,15 @@
                     <button type="submit" title="@Localizer["Search"]"><i class="bi bi-search"></i></button>
                 </form>
                 <ul class="navbar-nav align-items-center">
-                    @if (User.Identity?.IsAuthenticated == true)
+                    @if (isAuth)
                     {
                         @await Component.InvokeAsync("NotificationBell")
                     }
                     <li class="nav-item me-2">
-                        @if (User.Identity?.IsAuthenticated == true)
+                        @if (isAuth)
                         {
-                            var count = HttpContextAccessor.HttpContext?.Session.GetInt32(Diger.ssShoppingCart) ?? 0;
                             <a asp-controller="Cart" asp-action="Index" class="nav-link" title="@Localizer["Cart"]">
-                                <i class="bi bi-cart3 fs-5"></i><span class="cart-badge">@count</span>
+                                <i class="bi bi-cart3 fs-5"></i><span class="cart-badge">@cartCount</span>
                             </a>
                         }
                         else
@@ -100,4 +120,114 @@
             </div>
         </div>
     </nav>
+
+    <!-- Mobile bottom tabs -->
+    <nav class="mobile-bottom-nav d-lg-none" aria-label="@Localizer["Menu"]">
+        <a class="mobile-tab @(IsHome() ? "active" : "")" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-house@(IsHome() ? "-fill" : "")"></i>
+            <span>@Localizer["Home"]</span>
+        </a>
+        <a class="mobile-tab @(IsShop() ? "active" : "")" asp-controller="Home" asp-action="Shop">
+            <i class="bi bi-shop"></i>
+            <span>@Localizer["Shop"]</span>
+        </a>
+        <a class="mobile-tab @(IsCart() ? "active" : "")"
+           href="@(isAuth ? Url.Action("Index", "Cart") : "/Identity/Account/Login")">
+            <i class="bi bi-cart3"></i>
+            <span>@Localizer["Cart"]</span>
+            @if (cartCount > 0)
+            {
+                <em class="mobile-tab-badge">@(cartCount > 99 ? "99+" : cartCount.ToString())</em>
+            }
+        </a>
+        <button type="button" class="mobile-tab @(IsMenuArea() ? "active" : "")" data-bs-toggle="offcanvas" data-bs-target="#storeSideMenu" aria-controls="storeSideMenu">
+            <i class="bi bi-grid@(IsMenuArea() ? "-fill" : "")"></i>
+            <span>@Localizer["Menu"]</span>
+        </button>
+    </nav>
+
+    <!-- Side menu (mobile + tablet) -->
+    <div class="offcanvas offcanvas-start store-side-menu" tabindex="-1" id="storeSideMenu" aria-labelledby="storeSideMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="storeSideMenuLabel">
+                @{
+                    var sideS = Site.Settings;
+                    var sideName = Localizer.IsArabic && !string.IsNullOrWhiteSpace(sideS.SiteNameAr) ? sideS.SiteNameAr : (string.IsNullOrWhiteSpace(sideS.SiteNameEn) ? "Sager" : sideS.SiteNameEn);
+                    var sideHi = Localizer.IsArabic && !string.IsNullOrWhiteSpace(sideS.SiteNameHighlightAr) ? sideS.SiteNameHighlightAr : (string.IsNullOrWhiteSpace(sideS.SiteNameHighlightEn) ? "Shop" : sideS.SiteNameHighlightEn);
+                }
+                <span class="brand-sager">@sideName</span><span class="brand-shop">@sideHi</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form class="side-search" asp-controller="Home" asp-action="Search" method="get">
+                <input name="q" type="search" class="form-control" placeholder="@Localizer["SearchPlaceholder"]" />
+                <button type="submit" class="btn btn-accent" title="@Localizer["Search"]"><i class="bi bi-search"></i></button>
+            </form>
+
+            <div class="side-menu-group">
+                <p class="side-menu-label">@Localizer["Menu"]</p>
+                <a class="side-menu-link" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @Localizer["Home"]</a>
+                <a class="side-menu-link" asp-controller="Home" asp-action="Shop"><i class="bi bi-shop"></i> @Localizer["Shop"]</a>
+                <a class="side-menu-link" asp-controller="Home" asp-action="About"><i class="bi bi-info-circle"></i> @Localizer["About"]</a>
+                @if (isAuth)
+                {
+                    <a class="side-menu-link" asp-controller="Order" asp-action="Index"><i class="bi bi-bag-check"></i> @Localizer["Orders"]</a>
+                    <a class="side-menu-link" asp-controller="Wishlist" asp-action="Index"><i class="bi bi-heart"></i> @Localizer["Wishlist"]</a>
+                    <a class="side-menu-link" asp-controller="Profile" asp-action="Index"><i class="bi bi-person"></i> @Localizer["MyAccount"]</a>
+                    <a class="side-menu-link" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell"></i> @Localizer["Notifications"]</a>
+                    <a class="side-menu-link" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3"></i> @Localizer["Cart"] <span class="cart-badge">@cartCount</span></a>
+                }
+            </div>
+
+            <div class="side-menu-group">
+                <p class="side-menu-label">@Localizer["Language"] · @Localizer["Currency"]</p>
+                <div class="side-lang-row">
+                    <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="en" asp-route-returnUrl="@returnUrl"
+                       class="lang-btn @(Localizer.CurrentLanguage == "en" ? "active" : "")" title="English">
+                        <img src="~/images/flags/gb.svg" alt="English" class="flag-icon" /> EN
+                    </a>
+                    <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="ar" asp-route-returnUrl="@returnUrl"
+                       class="lang-btn @(Localizer.CurrentLanguage == "ar" ? "active" : "")" title="العربية">
+                        <img src="~/images/flags/sy.svg" alt="العربية" class="flag-icon" /> AR
+                    </a>
+                    <a asp-controller="Culture" asp-action="SetLanguage" asp-route-culture="tr" asp-route-returnUrl="@returnUrl"
+                       class="lang-btn @(Localizer.CurrentLanguage == "tr" ? "active" : "")" title="Türkçe">
+                        <img src="~/images/flags/tr.svg" alt="Türkçe" class="flag-icon" /> TR
+                    </a>
+                </div>
+                <form asp-controller="Culture" asp-action="SetCurrency" method="post" class="side-currency mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <select name="currency" class="form-select" onchange="this.form.submit()" title="@Localizer["Currency"]">
+                        @foreach (var c in Currency.GetSupportedCurrencies())
+                        {
+                            if (Currency.CurrentCurrency == c.Code)
+                            {
+                                <option value="@c.Code" selected>@c.Code (@c.Symbol)</option>
+                            }
+                            else
+                            {
+                                <option value="@c.Code">@c.Code (@c.Symbol)</option>
+                            }
+                        }
+                    </select>
+                </form>
+            </div>
+
+            <div class="side-menu-group side-auth">
+                @if (isAuth)
+                {
+                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post">
+                        <button type="submit" class="side-menu-link side-menu-btn w-100"><i class="bi bi-box-arrow-right"></i> @Localizer["Logout"]</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="side-menu-link" href="/Identity/Account/Login"><i class="bi bi-box-arrow-in-right"></i> @Localizer["Login"]</a>
+                    <a class="side-menu-link" href="/Identity/Account/Register"><i class="bi bi-person-plus"></i> @Localizer["Register"]</a>
+                }
+            </div>
+        </div>
+    </div>
 }

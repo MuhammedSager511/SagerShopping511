@@ -58,6 +58,8 @@ namespace webShopping.Models
         public double SubtotalUsd { get; set; }
         public double ShippingUsd { get; set; }
         public double VatUsd { get; set; }
+        public double DiscountUsd { get; set; }
+        public string? CouponCode { get; set; }
         public string Country { get; set; } = "Syria";
 
         public string? ConversationId { get; set; }

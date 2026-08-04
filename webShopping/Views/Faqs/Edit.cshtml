@@ -1,0 +1,5 @@
+@model webShopping.Models.FaqItem
+@{
+    ViewData["Title"] = Localizer["Edit"] + " " + Localizer["Faqs"];
+}
+@await Html.PartialAsync("Create", Model)

@@ -4,6 +4,15 @@ namespace webShopping.Models
     {
         public int Id { get; set; }
 
+        // Branding / theme (admin editable)
+        public string SiteNameEn { get; set; } = "Sager";
+        public string SiteNameHighlightEn { get; set; } = "Shop";
+        public string SiteNameAr { get; set; } = "ساجر";
+        public string SiteNameHighlightAr { get; set; } = "شوب";
+        public string LogoPath { get; set; } = "";
+        public string ThemePrimary { get; set; } = "#151528";
+        public string ThemeAccent { get; set; } = "#e23b58";
+
         public string HeroTitleEn { get; set; } = "Discover Premium Products Worldwide";
         public string HeroTitleAr { get; set; } = "اكتشف منتجات مميزة من حول العالم";
         public string HeroSubtitleEn { get; set; } = "Shop with confidence — fast delivery, secure checkout, multi-currency support.";

@@ -1,22 +1,25 @@
 @inject ISiteContentService Site
 @{
     var s = Site.Settings;
+    var footName = Localizer.IsArabic && !string.IsNullOrWhiteSpace(s.SiteNameAr) ? s.SiteNameAr : (string.IsNullOrWhiteSpace(s.SiteNameEn) ? "Sager" : s.SiteNameEn);
+    var footHi = Localizer.IsArabic && !string.IsNullOrWhiteSpace(s.SiteNameHighlightAr) ? s.SiteNameHighlightAr : (string.IsNullOrWhiteSpace(s.SiteNameHighlightEn) ? "Shop" : s.SiteNameHighlightEn);
+    var footFull = ThemeHelper.FullSiteName(s, Localizer.IsArabic);
 }
 <footer class="site-footer">
     <div class="container-fluid px-lg-4">
         <div class="row g-4">
             <div class="col-md-4">
-                <h6><span style="color:#fff">Sager</span><span style="color:var(--accent)">Shop</span></h6>
-                <p class="small">@Site.T(s.FooterTextEn, s.FooterTextAr)</p>
-                <div class="d-flex gap-3 mt-2">
+                <h6 class="footer-brand"><span>@footName</span><span class="accent">@footHi</span></h6>
+                <p class="small mb-3">@Site.T(s.FooterTextEn, s.FooterTextAr)</p>
+                <div class="d-flex gap-3 mt-2 footer-social">
                     @if (!string.IsNullOrEmpty(s.FacebookUrl) && s.FacebookUrl != "#")
-                    { <a href="@s.FacebookUrl" target="_blank"><i class="bi bi-facebook fs-5"></i></a> }
+                    { <a href="@SocialLinks.Normalize(s.FacebookUrl)" target="_blank" rel="noopener" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a> }
                     @if (!string.IsNullOrEmpty(s.InstagramUrl) && s.InstagramUrl != "#")
-                    { <a href="@s.InstagramUrl" target="_blank"><i class="bi bi-instagram fs-5"></i></a> }
+                    { <a href="@SocialLinks.Normalize(s.InstagramUrl)" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a> }
                     @if (!string.IsNullOrEmpty(s.TwitterUrl) && s.TwitterUrl != "#")
-                    { <a href="@s.TwitterUrl" target="_blank"><i class="bi bi-twitter-x fs-5"></i></a> }
+                    { <a href="@SocialLinks.Normalize(s.TwitterUrl)" target="_blank" rel="noopener" aria-label="X"><i class="bi bi-twitter-x fs-5"></i></a> }
                     @if (!string.IsNullOrEmpty(s.WhatsAppUrl) && s.WhatsAppUrl != "#")
-                    { <a href="@s.WhatsAppUrl" target="_blank"><i class="bi bi-whatsapp fs-5"></i></a> }
+                    { <a href="@SocialLinks.WhatsApp(s.WhatsAppUrl)" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp fs-5"></i></a> }
                 </div>
             </div>
             <div class="col-md-2">
@@ -44,11 +47,13 @@
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; @DateTime.Now.Year SagerShop. @Localizer["GlobalStore"].
-            <a asp-controller="Home" asp-action="Terms" class="ms-2">@Localizer["TermsOfUse"]</a>
-            <a asp-controller="Home" asp-action="Refund" class="ms-2">@Localizer["RefundPolicy"]</a>
-            <a asp-controller="Order" asp-action="Track" class="ms-2">@Localizer["TrackOrder"]</a>
-            <a asp-controller="Home" asp-action="Privacy" class="ms-2">@Localizer["PrivacyPolicy"]</a>
+            <div class="footer-copy">&copy; @DateTime.Now.Year @footFull. @Localizer["GlobalStore"].</div>
+            <div class="footer-legal">
+                <a asp-controller="Home" asp-action="Terms">@Localizer["TermsOfUse"]</a>
+                <a asp-controller="Home" asp-action="Refund">@Localizer["RefundPolicy"]</a>
+                <a asp-controller="Order" asp-action="Track">@Localizer["TrackOrder"]</a>
+                <a asp-controller="Home" asp-action="Privacy">@Localizer["PrivacyPolicy"]</a>
+            </div>
         </div>
     </div>
 </footer>

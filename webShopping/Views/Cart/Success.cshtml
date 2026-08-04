@@ -1,6 +1,6 @@
 @model webShopping.Models.OrderHeader
 @{
-    var bankInfo = LocalizedContent.BankTransferInfo(Site.Settings, Localizer);
+    var bankInfo = LocalizedContent.BankTransferInfo(Site, Localizer);
     ViewData["Title"] = Localizer["OrderPlacedPendingPayment"];
 }
 

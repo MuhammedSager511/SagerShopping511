@@ -7,7 +7,7 @@
     <div class="col-lg-6">
         <div class="global-card p-4">
             <h4 class="fw-bold mb-3">@Localizer["AddCategory"]</h4>
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="mb-3">
                     <label asp-for="Name" class="form-label">@Localizer["CategoryName"] (EN)</label>
@@ -17,6 +17,17 @@
                 <div class="mb-3">
                     <label asp-for="NameAr" class="form-label">@Localizer["NameAr"]</label>
                     <input asp-for="NameAr" class="form-control" dir="rtl" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="SortOrder" class="form-label">@Localizer["SortBy"]</label>
+                    <input asp-for="SortOrder" class="form-control" type="number" />
+                    <div class="form-text">@Localizer["SortOrderHint"]</div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Image" class="form-label">@Localizer["CategoryImage"]</label>
+                    <input asp-for="Image" type="file" accept="image/*" class="form-control" />
+                    <div class="form-text">@Localizer["CategoryImageHint"]</div>
+                    <span asp-validation-for="Image" class="text-danger"></span>
                 </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>

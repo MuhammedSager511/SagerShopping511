@@ -1,0 +1,40 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container py-4">
+    <h1 class="text-danger">حدث خطأ</h1>
+    <h2 class="text-danger h5">An error occurred while processing your request.</h2>
+
+    @if (Model.ShowRequestId)
+    {
+        <p class="mt-3">
+            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        </p>
+    }
+
+    @if (Model.ShowDetails && !string.IsNullOrWhiteSpace(Model.ExceptionMessage))
+    {
+        <div class="alert alert-warning mt-3 text-start" dir="ltr">
+            <div><strong>Path:</strong> @Model.Path</div>
+            <div><strong>Type:</strong> @Model.ExceptionType</div>
+            <div class="mt-2"><strong>Message:</strong></div>
+            <pre class="mb-0" style="white-space:pre-wrap">@Model.ExceptionMessage</pre>
+            @if (!string.IsNullOrWhiteSpace(Model.StackTrace))
+            {
+                <details class="mt-3">
+                    <summary>Stack trace</summary>
+                    <pre style="white-space:pre-wrap;font-size:.8rem">@Model.StackTrace</pre>
+                </details>
+            }
+        </div>
+        <p class="text-muted small">انسخ الرسالة أعلاه وأرسلها للمطور. بعد الإصلاح عطّل Diagnostics:ShowErrorDetails.</p>
+    }
+    else
+    {
+        <p class="text-muted">تحقق من ملف <code>logs/errors.log</code> على الاستضافة لمعرفة السبب.</p>
+    }
+
+    <a class="btn btn-accent mt-3" asp-controller="Home" asp-action="Index">العودة للرئيسية</a>
+</div>

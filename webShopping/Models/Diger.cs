@@ -10,7 +10,10 @@ namespace webShopping.Models
         public const string status_awaiting_payment = "awaiting_payment";
         public const string status_payment_review = "payment_review";
         public const string status_cargo = "cargo";
+        public const string status_preparing = "preparing";
+        public const string status_cancelled = "cancelled";
         public const string ssShoppingCart = "Shopping Cart Session";
+        public const string ssCouponCode = "CouponCode";
         public const string Payment_Card = "Card";
         public const string Payment_PayPal = "PayPal";
         public const string Payment_BankTransfer = "BankTransfer";

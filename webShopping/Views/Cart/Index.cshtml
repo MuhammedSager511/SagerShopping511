@@ -7,62 +7,126 @@
 @if (Model.ListCart.Any())
 {
     <div class="section-title"><i class="bi bi-cart3"></i> @Localizer["Cart"]</div>
-    <div class="cart-table">
-        <table class="table table-hover mb-0">
-            <thead class="table-dark">
-                <tr>
-                    <th>@Localizer["ProductImage"]</th>
-                    <th>@Localizer["Name"]</th>
-                    <th>@Localizer["Count"]</th>
-                    <th>@Localizer["Price"]</th>
-                    <th>@Localizer["Total"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.ListCart)
-                {
+
+    <!-- Desktop table -->
+    <div class="cart-table d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
                     <tr>
-                        <td>
-                            @if (item.Product.Path == null)
-                            {
-                                <img src="~/images/image/oip.jpg" width="60" height="45" style="object-fit:cover;border-radius:6px" />
-                            }
-                            else
-                            {
-                                <img src="~/files/@item.Product.Path" width="60" height="45" style="object-fit:cover;border-radius:6px" />
-                            }
-                        </td>
-                        <td class="fw-semibold">@item.Product.Name</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a asp-action="Decrease" asp-route-cartId="@item.Id" class="btn btn-outline-danger"><i class="bi bi-dash"></i></a>
-                                <span class="btn btn-light disabled">@item.Count</span>
-                                <a asp-action="Add" asp-route-cartId="@item.Id" class="btn btn-outline-primary"><i class="bi bi-plus"></i></a>
-                                <a asp-action="Remove" asp-route-cartId="@item.Id" class="btn btn-outline-danger"><i class="bi bi-trash"></i></a>
-                            </div>
-                        </td>
-                        <td>@Currency.Format(item.Product.Price)</td>
-                        <td class="fw-bold">@Currency.Format(item.Count * item.Product.Price)</td>
+                        <th>@Localizer["ProductImage"]</th>
+                        <th>@Localizer["Name"]</th>
+                        <th>@Localizer["Count"]</th>
+                        <th>@Localizer["Price"]</th>
+                        <th>@Localizer["Total"]</th>
                     </tr>
-                }
-            </tbody>
-            <tfoot>
-                <tr class="table-light">
-                    <td colspan="4" class="text-end fw-bold fs-5">@Localizer["Total"]</td>
-                    <td class="fw-bold fs-5 text-danger">@Currency.Format(Model.OrderHeader.orderTotal)</td>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ListCart)
+                    {
+                        <tr>
+                            <td>
+                                @if (item.Product.Path == null)
+                                {
+                                    <img src="~/images/image/oip.jpg" width="60" height="45" class="cart-thumb" alt="" />
+                                }
+                                else
+                                {
+                                    <img src="~/files/@item.Product.Path" width="60" height="45" class="cart-thumb" alt="" />
+                                }
+                            </td>
+                            <td class="fw-semibold">@LocalizedContent.ProductName(item.Product, Localizer)</td>
+                            <td>
+                                <div class="cart-qty">
+                                    <form asp-action="Decrease" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="cartId" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="-"><i class="bi bi-dash"></i></button>
+                                    </form>
+                                    <span class="cart-qty-count">@item.Count</span>
+                                    <form asp-action="Add" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="cartId" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-primary btn-sm" title="+"><i class="bi bi-plus"></i></button>
+                                    </form>
+                                    <form asp-action="Remove" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="cartId" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="@Localizer["Delete"]"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>@Currency.Format(PriceHelper.EffectiveUnitPrice(item.Product))</td>
+                            <td class="fw-bold">@Currency.Format(item.Count * PriceHelper.EffectiveUnitPrice(item.Product))</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="4" class="text-end fw-bold fs-5">@Localizer["Total"]</td>
+                        <td class="fw-bold fs-5 text-danger">@Currency.Format(Model.OrderHeader.orderTotal)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
-    <div class="row mt-4 g-3">
-        <div class="col-md-4">
-            <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-secondary form-control">
+
+    <!-- Mobile cards -->
+    <div class="cart-mobile d-md-none">
+        @foreach (var item in Model.ListCart)
+        {
+            <div class="cart-mobile-card">
+                <div class="cart-mobile-top">
+                    @if (item.Product.Path == null)
+                    {
+                        <img src="~/images/image/oip.jpg" class="cart-mobile-img" alt="" />
+                    }
+                    else
+                    {
+                        <img src="~/files/@item.Product.Path" class="cart-mobile-img" alt="" />
+                    }
+                    <div class="cart-mobile-info">
+                        <div class="cart-mobile-name">@LocalizedContent.ProductName(item.Product, Localizer)</div>
+                        <div class="cart-mobile-price">@Currency.Format(PriceHelper.EffectiveUnitPrice(item.Product))</div>
+                        <div class="cart-mobile-line">@Localizer["Total"]: <strong>@Currency.Format(item.Count * PriceHelper.EffectiveUnitPrice(item.Product))</strong></div>
+                    </div>
+                </div>
+                <div class="cart-mobile-actions">
+                    <div class="cart-qty">
+                        <form asp-action="Decrease" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartId" value="@item.Id" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="-"><i class="bi bi-dash"></i></button>
+                        </form>
+                        <span class="cart-qty-count">@item.Count</span>
+                        <form asp-action="Add" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartId" value="@item.Id" />
+                            <button type="submit" class="btn btn-outline-primary btn-sm" title="+"><i class="bi bi-plus"></i></button>
+                        </form>
+                    </div>
+                    <form asp-action="Remove" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="cartId" value="@item.Id" />
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        }
+        <div class="cart-mobile-total">
+            <span>@Localizer["Total"]</span>
+            <strong>@Currency.Format(Model.OrderHeader.orderTotal)</strong>
+        </div>
+    </div>
+
+    <div class="row mt-3 g-2 cart-actions">
+        <div class="col-12 col-md-4">
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-secondary w-100">
                 <i class="bi bi-arrow-left"></i> @Localizer["ContinueShopping"]
             </a>
         </div>
-        <div class="col-md-4"></div>
-        <div class="col-md-4">
-            <a asp-action="Summary" class="btn btn-accent form-control py-2">
+        <div class="col-12 col-md-4 ms-md-auto">
+            <a asp-action="Summary" class="btn btn-accent w-100 py-2">
                 <i class="bi bi-credit-card"></i> @Localizer["Checkout"]
             </a>
         </div>

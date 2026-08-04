@@ -1,6 +1,14 @@
+@using webShopping.Services
 @{
     ViewData["Title"] = Localizer["TrackOrderTitle"];
     var order = ViewBag.TrackedOrder as webShopping.Models.OrderHeader;
+    var lines = ViewBag.TrackedLines as IEnumerable<webShopping.Models.orderDetails>
+                ?? order?.orderDetails
+                ?? Enumerable.Empty<webShopping.Models.orderDetails>();
+    var inputOrderId = ViewBag.InputOrderId as string ?? order?.Id.ToString() ?? "";
+    var inputEmail = ViewBag.InputEmail as string ?? "";
+    var inputPhone = ViewBag.InputPhone as string ?? "";
+    var isAuth = User.Identity?.IsAuthenticated == true;
     ViewBag.Breadcrumbs = new (string, string?)[] {
         (Localizer["Home"], Url.Action("Index", "Home")),
         (Localizer["TrackOrderTitle"], null)
@@ -9,51 +17,174 @@
 
 <div class="section-title mb-4"><i class="bi bi-geo-alt"></i> @Localizer["TrackOrderTitle"]</div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="global-card p-4 mb-4">
+<div class="row justify-content-center g-4">
+    <div class="col-lg-5">
+        <div class="global-card p-4">
             <p class="text-muted small mb-3">@Localizer["TrackOrderSubtitle"]</p>
-            <form asp-action="Track" method="post">
+            <form asp-controller="Order" asp-action="Track" method="post" id="trackOrderForm">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 small" role="alert"></div>
+                }
                 <div class="mb-3">
-                    <label class="form-label">@Localizer["OrderNumber"]</label>
-                    <input type="number" name="orderId" class="form-control" min="1" required value="@(order?.Id)" />
+                    <label class="form-label" for="orderId">@Localizer["OrderNumber"]</label>
+                    <input type="text" inputmode="numeric" name="orderId" id="orderId" class="form-control"
+                           required value="@inputOrderId" autocomplete="off" placeholder="e.g. 12" />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">@Localizer["Email"]</label>
-                    <input type="email" name="email" class="form-control" required />
+                    <label class="form-label" for="email">@Localizer["Email"]</label>
+                    <input type="email" name="email" id="email" class="form-control"
+                           value="@inputEmail" autocomplete="email" placeholder="name@example.com" />
                 </div>
-                <button type="submit" class="btn btn-accent w-100">@Localizer["TrackOrder"]</button>
+                <div class="mb-3">
+                    <label class="form-label" for="phone">@Localizer["Phone"]</label>
+                    <input type="tel" name="phone" id="phone" class="form-control"
+                           value="@inputPhone" autocomplete="tel" placeholder="+963..." />
+                </div>
+                <p class="small text-muted">@Localizer["TrackOrderHint"]</p>
+                @if (isAuth)
+                {
+                    <p class="small text-success mb-3"><i class="bi bi-info-circle"></i> @Localizer["TrackOrderLoggedInHint"]</p>
+                }
+                <button type="submit" class="btn btn-accent w-100">
+                    <i class="bi bi-search"></i> @Localizer["TrackOrder"]
+                </button>
             </form>
         </div>
+    </div>
 
-        @if (order != null)
+    @if (order != null)
+    {
+        var status = order.orderStatus ?? "";
+        var isCancelled = status == Diger.status_cancelled;
+        var stepLabels = new[]
         {
-            <div class="global-card p-4">
-                <h5 class="fw-bold mb-3">@Localizer["OrderNumber"]#@order.Id</h5>
-                <dl class="row mb-0">
-                    <dt class="col-sm-4 text-muted">@Localizer["Status"]</dt>
+            Localizer["OrderStagePending"],
+            Localizer["OrderStagePaymentConfirm"],
+            Localizer["OrderStageConfirmed"],
+            Localizer["OrderStageShipped"]
+        };
+        var activeIndex = OrderStatusHelper.ProgressIndex(status);
+
+        <div class="col-lg-7">
+            <div class="global-card p-4 track-result">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <div>
+                        <h2 class="h5 fw-bold mb-1">@Localizer["OrderNumber"] #@order.Id</h2>
+                        <p class="text-muted small mb-0">@order.orderDate.ToLocalTime().ToString("g")</p>
+                    </div>
+                    <span class="badge @OrderStatusHelper.BadgeClass(order.orderStatus) fs-6">
+                        @OrderStatusHelper.Label(Localizer, order.orderStatus)
+                    </span>
+                </div>
+
+                @if (isCancelled)
+                {
+                    <div class="alert alert-secondary mb-3"><i class="bi bi-x-circle"></i> @Localizer["Cancelled"]</div>
+                }
+                else
+                {
+                    <ol class="track-steps mb-4" aria-label="@Localizer["Situation"]">
+                        @for (var i = 0; i < stepLabels.Length; i++)
+                        {
+                            var done = activeIndex >= 0 && i <= activeIndex;
+                            var current = activeIndex == i;
+                            <li class="@(done ? "is-done" : "") @(current ? "is-current" : "")">
+                                <span class="track-step-dot" aria-hidden="true"></span>
+                                <span class="track-step-label">@stepLabels[i]</span>
+                            </li>
+                        }
+                    </ol>
+                }
+
+                <h3 class="h6 fw-bold mb-2"><i class="bi bi-truck"></i> @Localizer["ShippingInfo"]</h3>
+                <dl class="row mb-3 track-meta">
+                    <dt class="col-sm-4 text-muted">@Localizer["Name"]</dt>
+                    <dd class="col-sm-8">@order.Name @order.LastName</dd>
+
+                    @if (!string.IsNullOrEmpty(order.PhoneNumber))
+                    {
+                        <dt class="col-sm-4 text-muted">@Localizer["Phone"]</dt>
+                        <dd class="col-sm-8">@order.PhoneNumber</dd>
+                    }
+
+                    <dt class="col-sm-4 text-muted">@Localizer["Address"]</dt>
                     <dd class="col-sm-8">
-                        <span class="badge @OrderStatusHelper.BadgeClass(order.orderStatus)">
-                            @OrderStatusHelper.Label(Localizer, order.orderStatus)
-                        </span>
+                        @order.Addres
+                        @if (!string.IsNullOrWhiteSpace(order.Semt))
+                        { <span>· @order.Semt</span> }
+                        @if (!string.IsNullOrWhiteSpace(order.sehir))
+                        { <span>· @order.sehir</span> }
+                        @if (!string.IsNullOrWhiteSpace(order.Country))
+                        { <span>· @order.Country</span> }
+                        @if (!string.IsNullOrWhiteSpace(order.PostKodu))
+                        { <span class="d-block small text-muted">@Localizer["PostCode"]: @order.PostKodu</span> }
                     </dd>
-                    <dt class="col-sm-4 text-muted">@Localizer["OrderDate"]</dt>
-                    <dd class="col-sm-8">@order.orderDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
                     @if (!string.IsNullOrEmpty(order.TrackingNumber))
                     {
                         <dt class="col-sm-4 text-muted">@Localizer["TrackingNumber"]</dt>
                         <dd class="col-sm-8"><code class="fs-6">@order.TrackingNumber</code></dd>
                     }
+
+                    <dt class="col-sm-4 text-muted">@Localizer["PaymentMethod"]</dt>
+                    <dd class="col-sm-8">
+                        @order.PaymentMethod
+                        @if (!string.IsNullOrEmpty(order.PaymentBankName))
+                        { <span class="text-muted">· @order.PaymentBankName</span> }
+                    </dd>
+
                     <dt class="col-sm-4 text-muted">@Localizer["Total"]</dt>
                     <dd class="col-sm-8 fw-bold text-danger">@Currency.Format(order.orderTotal)</dd>
                 </dl>
-                @if (User.Identity?.IsAuthenticated == true)
+
+                <h3 class="h6 fw-bold mb-2"><i class="bi bi-bag"></i> @Localizer["Products"]</h3>
+                @if (lines.Any())
                 {
-                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm mt-3">@Localizer["Details"]</a>
+                    <ul class="list-group list-group-flush mb-3 track-products">
+                        @foreach (var line in lines)
+                        {
+                            <li class="list-group-item d-flex justify-content-between px-0">
+                                <span>
+                                    @(line.product != null ? LocalizedContent.ProductName(line.product, Localizer) : $"#{line.productId}")
+                                    <small class="text-muted">× @line.count</small>
+                                </span>
+                                <strong>@Currency.Format(line.Price * line.count)</strong>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3">@Localizer["NoProductsInOrder"]</p>
+                }
+
+                @if (isAuth)
+                {
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> @Localizer["Details"]
+                    </a>
                 }
             </div>
-        }
-    </div>
+        </div>
+    }
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var form = document.getElementById('trackOrderForm');
+            if (!form) return;
+            var isAuth = @(isAuth ? "true" : "false");
+            form.addEventListener('submit', function (e) {
+                var email = (document.getElementById('email') || {}).value || '';
+                var phone = (document.getElementById('phone') || {}).value || '';
+                if (!isAuth && !email.trim() && !phone.trim()) {
+                    e.preventDefault();
+                    alert('@Html.Raw(Localizer["TrackOrderInvalid"].Replace("'", "\\'"))');
+                }
+            });
+        })();
+    </script>
+}

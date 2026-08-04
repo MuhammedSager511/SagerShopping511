@@ -1,6 +1,6 @@
 @model string
 
-<div class="d-flex flex-wrap gap-2 mb-3 order-filter-tabs">
+<div class="order-filter-tabs">
     <a asp-action="pending" asp-controller="Order"
        class="btn btn-sm @(Model == "pending" ? "btn-accent" : "btn-outline-primary")">
         @Localizer["BacklogOrders"]

@@ -19,12 +19,34 @@ namespace webShopping.Models
         [Range(0.01, double.MaxValue)]
         public double Price { get; set; }
 
+        /// <summary>Optional discounted price in USD. When set and lower than Price, it is the selling price.</summary>
+        [Range(0.01, double.MaxValue)]
+        public double? SalePrice { get; set; }
+
+        /// <summary>Comma-separated color options, e.g. Red,Blue,Black</summary>
+        [MaxLength(500)]
+        public string Colors { get; set; } = "";
+
+        /// <summary>Comma-separated size options, e.g. S,M,L,XL</summary>
+        [MaxLength(500)]
+        public string Sizes { get; set; } = "";
+
+        public int? BrandId { get; set; }
+
+        [ForeignKey("BrandId")]
+        public Brand? Brand { get; set; }
+
         public string? FileType { get; set; }
 
         public string Description { get; set; } = "";
 
         public bool IsHome { get; set; }
+
+        /// <summary>True when StockQuantity &gt; 0. Kept for existing queries/UI.</summary>
         public bool IsStock { get; set; } = true;
+
+        [Range(0, int.MaxValue)]
+        public int StockQuantity { get; set; } = 0;
 
         [Required]
         public int CategoryId { get; set; }
@@ -39,5 +61,11 @@ namespace webShopping.Models
 
         [NotMapped]
         public List<IFormFile>? GalleryFiles { get; set; }
+
+        public void SyncStockFlag()
+        {
+            if (StockQuantity < 0) StockQuantity = 0;
+            IsStock = StockQuantity > 0;
+        }
     }
 }

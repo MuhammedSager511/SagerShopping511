@@ -1,12 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
 namespace webShopping.Models
 {
     public class OrderDetailsVM
     {
-        public OrderHeader OrderHeader { get; set; }
-       
-       
-        public IEnumerable<orderDetails> orderDetails { get; set; }
+        public OrderHeader? OrderHeader { get; set; }
+        public IEnumerable<orderDetails>? orderDetails { get; set; }
     }
 }

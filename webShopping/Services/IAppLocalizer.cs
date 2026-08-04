@@ -6,6 +6,7 @@ namespace webShopping.Services
         string Get(string key);
         string Get(string key, string culture);
         bool IsArabic { get; }
+        bool IsRtl { get; }
         string CurrentLanguage { get; }
     }
 }

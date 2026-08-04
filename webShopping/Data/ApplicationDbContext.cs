@@ -27,6 +27,12 @@ namespace webShopping.Data
                 e.Property(z => z.ShippingCostUsd).HasPrecision(10, 2);
                 e.Property(z => z.VatRate).HasPrecision(5, 4);
             });
+
+            builder.Entity<AppNotification>(e =>
+            {
+                e.HasIndex(n => new { n.UserId, n.IsRead });
+                e.HasIndex(n => n.CreatedAt);
+            });
         }
         public DbSet<Categoty> Categoties { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -41,5 +47,12 @@ namespace webShopping.Data
         public DbSet<ShippingSettings> ShippingSettings { get; set; }
         public DbSet<ShippingZone> ShippingZones { get; set; }
         public DbSet<AppNotification> AppNotifications { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Banner> Banners { get; set; }
+        public DbSet<Coupon> Coupons { get; set; }
+        public DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; }
+        public DbSet<ContactMessage> ContactMessages { get; set; }
+        public DbSet<FaqItem> FaqItems { get; set; }
     }
 }

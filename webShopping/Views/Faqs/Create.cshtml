@@ -1,0 +1,20 @@
+@model webShopping.Models.FaqItem
+@{
+    ViewData["Title"] = Localizer["Create"] + " " + Localizer["Faqs"];
+    var isEdit = Model.Id > 0;
+}
+<div class="section-title mb-3">@(isEdit ? Localizer["Edit"] : Localizer["Create"]) @Localizer["Faqs"]</div>
+<div class="global-card p-4 col-lg-8">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()
+        @if (isEdit) { <input type="hidden" asp-for="Id" /> }
+        <div class="mb-3"><label class="form-label">Question EN</label><input asp-for="QuestionEn" class="form-control" required /></div>
+        <div class="mb-3"><label class="form-label">Question AR</label><input asp-for="QuestionAr" class="form-control" dir="rtl" /></div>
+        <div class="mb-3"><label class="form-label">Answer EN</label><textarea asp-for="AnswerEn" class="form-control" rows="4" required></textarea></div>
+        <div class="mb-3"><label class="form-label">Answer AR</label><textarea asp-for="AnswerAr" class="form-control" rows="4" dir="rtl"></textarea></div>
+        <div class="mb-3"><label class="form-label">@Localizer["SortBy"]</label><input asp-for="SortOrder" class="form-control" type="number" /></div>
+        <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label class="form-check-label" asp-for="IsActive">Active</label></div>
+        <button type="submit" class="btn btn-accent">@Localizer["Save"]</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">@Localizer["Cancel"]</a>
+    </form>
+</div>

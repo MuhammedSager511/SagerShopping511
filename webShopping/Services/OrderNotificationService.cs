@@ -47,7 +47,7 @@ namespace webShopping.Services
                 .FirstOrDefaultAsync(u => u.Id == order.ApplicationUserId);
             var culture = NotificationCulture.FromCountry(order.Country);
             var email = user?.Email;
-            var bankInfo = LocalizedContent.BankTransferInfo(_siteContent.Settings, _localizer);
+            var bankInfo = LocalizedContent.BankTransferInfo(_siteContent, _localizer);
 
             if (!string.IsNullOrEmpty(email))
             {

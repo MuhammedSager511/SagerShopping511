@@ -1,21 +1,37 @@
 @model IEnumerable<webShopping.Models.Categoty>
 
-<div class="col-md-3">
+<div class="col-md-3 shop-categories-col">
     <div class="category-sidebar">
         <div class="category-sidebar-header">
             <i class="bi bi-tags"></i> @Localizer["Categories"]
         </div>
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush category-circle-row">
             <a asp-action="Shop" asp-controller="Home"
-               class="list-group-item list-group-item-action @(ViewBag.KategoryId == null ? "active" : "")">
-                @Localizer["AllProducts"]
+               class="list-group-item list-group-item-action category-nav-item category-circle @(ViewBag.KategoryId == null ? "active" : "")">
+                <span class="category-nav-avatar" aria-hidden="true">
+                    <i class="bi bi-grid-fill"></i>
+                </span>
+                <span class="category-nav-name">@Localizer["AllProducts"]</span>
             </a>
             @foreach (var item in Model)
             {
+                var name = LocalizedContent.CategoryName(item, Localizer);
+                var img = !string.IsNullOrEmpty(item.ImagePath) ? Url.Content($"~/files/{item.ImagePath}") : null;
+                var initial = string.IsNullOrWhiteSpace(name) ? "?" : name.Trim()[0].ToString().ToUpperInvariant();
                 <a asp-action="Shop" asp-controller="Home"
-                   class="list-group-item list-group-item-action @(ViewBag.KategoryId?.ToString() == item.Id.ToString() ? "active" : "")"
+                   class="list-group-item list-group-item-action category-nav-item category-circle @(ViewBag.KategoryId?.ToString() == item.Id.ToString() ? "active" : "")"
                    asp-route-categoryId="@item.Id">
-                    @item.Name
+                    <span class="category-nav-avatar">
+                        @if (img != null)
+                        {
+                            <img src="@img" alt="" loading="lazy" />
+                        }
+                        else
+                        {
+                            <span>@initial</span>
+                        }
+                    </span>
+                    <span class="category-nav-name">@name</span>
                 </a>
             }
         </div>
